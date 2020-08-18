@@ -301,7 +301,7 @@
             this.addDevicesearchToolStripMenuItem.Name = "addDevicesearchToolStripMenuItem";
             this.addDevicesearchToolStripMenuItem.Size = new System.Drawing.Size(190, 22);
             this.addDevicesearchToolStripMenuItem.Text = "Add device";
-            this.addDevicesearchToolStripMenuItem.Click += new System.EventHandler(this.addDevicesearchToolStripMenuItem_Click);
+            this.addDevicesearchToolStripMenuItem.Click += new System.EventHandler(this.addDeviceSearchToolStripMenuItem_Click);
             // 
             // removeDeviceToolStripMenuItem
             // 
