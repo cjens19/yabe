@@ -25,16 +25,11 @@
 *********************************************************************/
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using System.IO.BACnet;
 using System.IO.BACnet.Serialize;
 using System.IO.BACnet.Storage;
-using System.Diagnostics;
 
 namespace Yabe
 {
@@ -67,17 +62,17 @@ namespace Yabe
             catch { }
 
 
-            for (int i = 1; i < 12; i++)
+            for (var i = 1; i < 12; i++)
                 ScheduleDataType.Items.Add(GetNiceName((BacnetApplicationTags)i));
 
             ReadEffectivePeriod();
             ReadEffectiveWeeklySchedule();
             ReadObjectsPropertiesReferences();
 
-            ToolTip t1=new ToolTip();
+            var t1=new ToolTip();
             t1.AutomaticDelay = 0;
             t1.SetToolTip(TxtStartDate, "A wrong value set this to Always");
-            ToolTip t2 = new ToolTip();
+            var t2 = new ToolTip();
             t2.AutomaticDelay = 0;
             t2.SetToolTip(TxtEndDate, "A wrong value set this to Always");
 
@@ -96,7 +91,7 @@ namespace Yabe
             {
                 if (comm.ReadPropertyRequest(adr, schedule_id, BacnetPropertyIds.PROP_EFFECTIVE_PERIOD, out value))
                 {
-                    DateTime dt=(DateTime)value[0].Value;
+                    var dt=(DateTime)value[0].Value;
                     if (dt.Ticks != 0)  // it's the way always date (encoded FF-FF-FF-FF) is put into a DateTime struct
                         TxtStartDate.Text = dt.ToString("d");
                     else
@@ -117,7 +112,7 @@ namespace Yabe
         private void WriteEffectivePeriod()
         {
             // Manual ASN.1/BER encoding
-            EncodeBuffer b = comm.GetEncodeBuffer(0);
+            var b = comm.GetEncodeBuffer(0);
             ASN1.encode_opening_tag(b, 3);
 
             DateTime dt;
@@ -154,7 +149,7 @@ namespace Yabe
             if (IdxRemove != -1)
                 listReferences.Items.RemoveAt(IdxRemove); // remove an old entry
 
-            ListViewItem lvi=new ListViewItem();
+            var lvi=new ListViewItem();
             // add a new one
             lvi.Text = newText;
             lvi.Tag = bopr;
@@ -171,9 +166,9 @@ namespace Yabe
                 IList<BacnetValue> value;
                 if (comm.ReadPropertyRequest(adr, schedule_id, BacnetPropertyIds.PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES, out value))
                 {
-                    foreach (BacnetValue bv in value)
+                    foreach (var bv in value)
                     {
-                        BacnetDeviceObjectPropertyReference bopr = (BacnetDeviceObjectPropertyReference)bv.Value;
+                        var bopr = (BacnetDeviceObjectPropertyReference)bv.Value;
                         AddPropertyRefentry(bopr, -1);
                     }
                 }
@@ -188,7 +183,7 @@ namespace Yabe
 
         private void WriteObjectsPropertiesReferences()
         {
-            List<BacnetValue> values=new List<BacnetValue>();
+            var values=new List<BacnetValue>();
 
             if (listReferences.Items.Count != 0)
             {
@@ -196,7 +191,7 @@ namespace Yabe
 
                 foreach (ListViewItem lvi in listReferences.Items)
                 {
-                    BacnetDeviceObjectPropertyReference b = (BacnetDeviceObjectPropertyReference)lvi.Tag;
+                    var b = (BacnetDeviceObjectPropertyReference)lvi.Tag;
                     values.Add(new BacnetValue(b));
                 }
             }
@@ -211,14 +206,14 @@ namespace Yabe
             // Write Default Schedule First
             try
             {
-                BacnetValue[] bv=new BacnetValue[1];
+                var bv=new BacnetValue[1];
                 bv[0]= Property.DeserializeValue(TxtScheduleDefault.Text,ScheduleType);
                 comm.WritePropertyRequest(adr, schedule_id, BacnetPropertyIds.PROP_SCHEDULE_DEFAULT, bv);
             }
             catch { }
 
             // Manual ASN.1/BER encoding
-            EncodeBuffer b = comm.GetEncodeBuffer(0);
+            var b = comm.GetEncodeBuffer(0);
             ASN1.encode_opening_tag(b, 3);
 
             // Monday
@@ -228,16 +223,16 @@ namespace Yabe
             //  Value
             // Thusday
             //  ....
-            for (int i = 0; i < 7; i++)
+            for (var i = 0; i < 7; i++)
             {
                 ASN1.encode_opening_tag(b, 0);
-                TreeNode T = Schedule.Nodes[i];
+                var T = Schedule.Nodes[i];
 
                 foreach (TreeNode entry in T.Nodes)
                 {
-                    String[] s = entry.Text.Split('=');
+                    var s = entry.Text.Split('=');
 
-                    BacnetValue bdt = Property.DeserializeValue(s[0], BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME);
+                    var bdt = Property.DeserializeValue(s[0], BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME);
                     BacnetValue bval;
                     if (s[1].ToLower().Contains("null"))
                         bval = new BacnetValue(null);
@@ -280,7 +275,7 @@ namespace Yabe
 
                 if (comm.RawEncodedDecodedPropertyConfirmedRequest(adr, schedule_id, BacnetPropertyIds.PROP_WEEKLY_SCHEDULE, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROPERTY, ref InOutBuffer))
                 {
-                    int offset = 0;
+                    var offset = 0;
                     byte tag_number;
                     uint len_value_type;
 
@@ -288,7 +283,7 @@ namespace Yabe
                     offset += ASN1.decode_tag_number(InOutBuffer, offset, out tag_number);
                     if (tag_number != 3) return;
 
-                    for (int i = 1; i < 8; i++)
+                    for (var i = 1; i < 8; i++)
                     {
                         TreeNode tday = null;
 
@@ -306,7 +301,7 @@ namespace Yabe
                             // Time
                             offset += ASN1.decode_tag_number_and_value(InOutBuffer, offset, out tag_number, out len_value_type);
                             offset += ASN1.bacapp_decode_data(InOutBuffer, offset, InOutBuffer.Length, (BacnetApplicationTags)tag_number, len_value_type, out value);
-                            DateTime dt = (DateTime)value.Value;                            
+                            var dt = (DateTime)value.Value;                            
 
                             // Value
                             offset += ASN1.decode_tag_number_and_value(InOutBuffer, offset, out tag_number, out len_value_type);
@@ -366,14 +361,14 @@ namespace Yabe
         private bool Valid_Entry(string e)
         {
 
-            String[] s = e.Split('=');
+            var s = e.Split('=');
             if (s.Length != 2) return false;
 
             try
             {
-                DateTime dt = Convert.ToDateTime("01/01/2001 " + s[0]);
+                var dt = Convert.ToDateTime("01/01/2001 " + s[0]);
                 if (s[1].ToLower().Contains("null")) return true;
-                BacnetValue bv = Property.DeserializeValue(s[1], ScheduleType);
+                var bv = Property.DeserializeValue(s[1], ScheduleType);
                 return true;
             }
             catch
@@ -425,10 +420,10 @@ namespace Yabe
             {
                 try
                 {
-                    EditPropertyObjectReference form = new EditPropertyObjectReference((BacnetDeviceObjectPropertyReference)listReferences.SelectedItems[0].Tag);
+                    var form = new EditPropertyObjectReference((BacnetDeviceObjectPropertyReference)listReferences.SelectedItems[0].Tag);
                     form.ShowDialog();
                     listReferences.SelectedItems[0].Tag = form.ObjRef;
-                    int idx=listReferences.SelectedItems[0].Index;
+                    var idx=listReferences.SelectedItems[0].Index;
 
                     if (form.RefModified == true)
                         AddPropertyRefentry(form.ObjRef, idx);
@@ -458,7 +453,7 @@ namespace Yabe
         {
             if ((Content == null) || (Content.Count == 0)) return;
 
-            HashSet<TreeNode> selectedTreeNodes = new HashSet<TreeNode>();
+            var selectedTreeNodes = new HashSet<TreeNode>();
             // Get the list of top level Treenodes
             foreach (TreeNode t in Schedule.SelectedNodes)
             {
@@ -473,9 +468,9 @@ namespace Yabe
             }
 
             TreeNode T=null;
-            foreach (TreeNode t in selectedTreeNodes)
+            foreach (var t in selectedTreeNodes)
             {
-                foreach (String s in Content)
+                foreach (var s in Content)
                 {
                     T = new TreeNode(s, 1, 1);
                     t.Nodes.Add(T);
@@ -502,9 +497,9 @@ namespace Yabe
             }
             else
             {
-                BacnetDeviceObjectPropertyReference newobj = new BacnetDeviceObjectPropertyReference(new BacnetObjectId(), BacnetPropertyIds.PROP_PRESENT_VALUE);
+                var newobj = new BacnetDeviceObjectPropertyReference(new BacnetObjectId(), BacnetPropertyIds.PROP_PRESENT_VALUE);
 
-                EditPropertyObjectReference form = new EditPropertyObjectReference(newobj);
+                var form = new EditPropertyObjectReference(newobj);
                 form.ShowDialog();
 
                 if (form.OutOK == true)
@@ -548,7 +543,7 @@ namespace Yabe
         Form FormDatePicker;
         private void DateTimePicker(ref string datestr)
         {
-            MonthCalendar cal = new MonthCalendar();
+            var cal = new MonthCalendar();
             cal.KeyPress += new KeyPressEventHandler(cal_KeyPress);
 
             FormDatePicker = new Form();
@@ -561,12 +556,12 @@ namespace Yabe
 
             try
             {
-                DateTime dt = Convert.ToDateTime(datestr);
+                var dt = Convert.ToDateTime(datestr);
                 cal.SetDate(dt);   
             }
             catch { }
 
-            DialogResult d=FormDatePicker.ShowDialog();
+            var d=FormDatePicker.ShowDialog();
 
             if (d != DialogResult.Abort)
                 datestr = cal.SelectionRange.Start.ToString("d");
@@ -583,14 +578,14 @@ namespace Yabe
 
         private void StartDatePicker_Click(object sender, EventArgs e)
         {
-            String s = TxtStartDate.Text;
+            var s = TxtStartDate.Text;
             DateTimePicker(ref s);
             TxtStartDate.Text = s;       
         }
 
         private void EndDatePicker_Click(object sender, EventArgs e)
         {
-            String s = TxtEndDate.Text;
+            var s = TxtEndDate.Text;
             DateTimePicker(ref s);
             TxtEndDate.Text = s;  
         }
@@ -598,7 +593,7 @@ namespace Yabe
         // only a valid date or no value : Always
         private void TxtDate_Validated(object sender, EventArgs e)
         {
-            TextBox _sender = (TextBox)sender;
+            var _sender = (TextBox)sender;
             if (_sender.Text == "Always") return;
             try
             {
@@ -617,7 +612,7 @@ namespace Yabe
 
         private static string GetNiceName(BacnetApplicationTags DataType)
         {
-            string name = DataType.ToString();
+            var name = DataType.ToString();
             name = name.Substring(23);
             name = name.Replace('_', ' ');
             name = System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(name.ToLower());
@@ -647,7 +642,7 @@ namespace Yabe
             foreach (BacnetObjectTypes bot in Enum.GetValues(typeof(BacnetObjectTypes)))
                 Reference_ObjType.Items.Add(new Enumcombo(bot.ToString().Substring(7), (uint)bot));
 
-            for (int i = 0; i < Reference_ObjType.Items.Count; i++)
+            for (var i = 0; i < Reference_ObjType.Items.Count; i++)
                 if ((Reference_ObjType.Items[i] as Enumcombo).enumValue == (uint)ObjRef.objectIdentifier.type)
                 {
                     Reference_ObjType.SelectedIndex = i;
@@ -657,7 +652,7 @@ namespace Yabe
             foreach (BacnetPropertyIds bpi in Enum.GetValues(typeof(BacnetPropertyIds)))
                 Reference_Prop.Items.Add(new Enumcombo(bpi.ToString().Substring(5), (uint)bpi));
 
-            for (int i = 0; i < Reference_Prop.Items.Count; i++)
+            for (var i = 0; i < Reference_Prop.Items.Count; i++)
                 if ((Reference_Prop.Items[i] as Enumcombo).enumValue == (uint)ObjRef.propertyIdentifier)
                 {
                     Reference_Prop.SelectedIndex = i;
@@ -683,7 +678,7 @@ namespace Yabe
             try
             {
                 BacnetObjectId? device = null;
-                uint ArrayIdx = ASN1.BACNET_ARRAY_ALL;
+                var ArrayIdx = ASN1.BACNET_ARRAY_ALL;
 
                 if (Reference_Device.Text != "")
                     device = new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, Convert.ToUInt32(Reference_Device.Text));
@@ -691,7 +686,7 @@ namespace Yabe
                     ArrayIdx = Convert.ToUInt16(Reference_Array.Text);
 
 
-                BacnetDeviceObjectPropertyReference newref = new BacnetDeviceObjectPropertyReference(
+                var newref = new BacnetDeviceObjectPropertyReference(
                     new BacnetObjectId((BacnetObjectTypes)(Reference_ObjType.SelectedItem as Enumcombo).enumValue, Convert.ToUInt32(Reference_ObjId.Text) & 0x3FFFFF),
                     (BacnetPropertyIds)(Reference_Prop.SelectedItem as Enumcombo).enumValue, device, ArrayIdx);
 

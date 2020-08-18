@@ -68,7 +68,6 @@ using System;
 using System.Collections;
 using System.ComponentModel;
 using System.Drawing;
-using System.Data;
 using System.Windows.Forms;
 
 namespace CodersLab.Windows.Controls
@@ -294,7 +293,7 @@ namespace CodersLab.Windows.Controls
 			get
 			{
 				// Create a SelectedNodesCollection to return, and add event handlers to catch actions on it
-				NodesCollection selectedNodesCollection = new NodesCollection();
+				var selectedNodesCollection = new NodesCollection();
 				foreach (TreeNode tn in htblSelectedNodes.Values)
 				{
 					selectedNodesCollection.Add(tn);
@@ -387,7 +386,7 @@ namespace CodersLab.Windows.Controls
 		private void UnselectAllNodesNotBelongingToLevel(int level, TreeViewAction tva)
 		{
 			// First, build list of nodes that need to be unselected
-			ArrayList arrNodesToDeselect = new ArrayList();
+			var arrNodesToDeselect = new ArrayList();
 			foreach (TreeNode selectedTreeNode in htblSelectedNodes.Values)
 			{
 				if (GetNodeLevel(selectedTreeNode) != level)
@@ -411,7 +410,7 @@ namespace CodersLab.Windows.Controls
 		private void UnselectAllNodesNotBelongingDirectlyToParent(TreeNode parent, TreeViewAction tva)
 		{
 			// First, build list of nodes that need to be unselected
-			ArrayList arrNodesToDeselect = new ArrayList();
+			var arrNodesToDeselect = new ArrayList();
 			foreach (TreeNode selectedTreeNode in htblSelectedNodes.Values)
 			{
 				if (selectedTreeNode.Parent != parent)
@@ -435,7 +434,7 @@ namespace CodersLab.Windows.Controls
 		private void UnselectAllNodesNotBelongingToParent(TreeNode parent, TreeViewAction tva)
 		{
 			// First, build list of nodes that need to be unselected
-			ArrayList arrNodesToDeselect = new ArrayList();
+			var arrNodesToDeselect = new ArrayList();
 			foreach (TreeNode selectedTreeNode in htblSelectedNodes.Values)
 			{
 				if (!IsChildOf(selectedTreeNode, parent))
@@ -459,7 +458,7 @@ namespace CodersLab.Windows.Controls
 		private void UnselectAllNodesExceptNode(TreeNode nodeKeepSelected, TreeViewAction tva)
 		{
 			// First, build list of nodes that need to be unselected
-			ArrayList arrNodesToDeselect = new ArrayList();
+			var arrNodesToDeselect = new ArrayList();
 			foreach (TreeNode selectedTreeNode in htblSelectedNodes.Values)
 			{
 				if (nodeKeepSelected == null)
@@ -531,7 +530,7 @@ namespace CodersLab.Windows.Controls
 		/// <returns>True if node was selected, false if not.</returns>
 		private bool SelectNode(TreeNode tn, bool select, TreeViewAction tva)
 		{
-			bool blnSelected = false;
+			var blnSelected = false;
 
 			if (tn == null)
 				return false;
@@ -542,7 +541,7 @@ namespace CodersLab.Windows.Controls
 				if (!IsNodeSelected(tn))
 				{
 					// Check if node selection is cancelled
-					TreeViewCancelEventArgs tvcea = new TreeViewCancelEventArgs(tn, false, tva);
+					var tvcea = new TreeViewCancelEventArgs(tn, false, tva);
 					base.OnBeforeSelect(tvcea);
 					if (tvcea.Cancel)
 					{
@@ -571,7 +570,7 @@ namespace CodersLab.Windows.Controls
 				{
 					OnBeforeDeselect(tn);
 
-					Color[] originalColors = (Color[])this.htblSelectedNodesOrigColors[tn.GetHashCode()];
+					var originalColors = (Color[])this.htblSelectedNodesOrigColors[tn.GetHashCode()];
 					if (originalColors != null)
 					{
 						htblSelectedNodes.Remove(tn.GetHashCode());
@@ -614,7 +613,7 @@ namespace CodersLab.Windows.Controls
 
 			// Select each node in range
 			SelectNode(firstNode, true, tva);
-			TreeNode tnTemp = firstNode;
+			var tnTemp = firstNode;
 			while (tnTemp != lastNode)
 			{
 				tnTemp = tnTemp.NextVisibleNode;
@@ -649,7 +648,7 @@ namespace CodersLab.Windows.Controls
 			}
 
 			// Unselect each node outside range
-			TreeNode tnTemp = firstNode;
+			var tnTemp = firstNode;
 			while (tnTemp != null)
 			{
 				tnTemp = tnTemp.PrevVisibleNode;
@@ -702,7 +701,7 @@ namespace CodersLab.Windows.Controls
 			// GKM
 			// Determine the rightmost position we'll process clicks (so that the click has to be on the node's bounds, 
 			// like the .NET treeview
-			int rightMostX = tn.Bounds.X + tn.Bounds.Width;
+			var rightMostX = tn.Bounds.X + tn.Bounds.Width;
 			return (tn != null && e.X < rightMostX); // GKM
 		}
 
@@ -713,7 +712,7 @@ namespace CodersLab.Windows.Controls
 		/// <returns>Level of node.</returns>
 		public int GetNodeLevel(TreeNode node)
 		{
-			int level = 0;
+			var level = 0;
 			while ((node = node.Parent) != null)
 				level++;
 			return level;
@@ -727,9 +726,9 @@ namespace CodersLab.Windows.Controls
 		/// <returns>True if specified node is a direct or indirect child of parent node, false if not.</returns>
 		private bool IsChildOf(TreeNode child, TreeNode parent)
 		{
-			bool blnChild = false;
+			var blnChild = false;
 
-			TreeNode tnTemp = child;
+			var tnTemp = child;
 			while (tnTemp != null)
 			{
 				if (tnTemp == parent)
@@ -753,7 +752,7 @@ namespace CodersLab.Windows.Controls
 		/// <returns>Root parent of specified node.</returns>
 		public TreeNode GetRootParent(TreeNode child)
 		{
-			TreeNode tnParent = child;
+			var tnParent = child;
 
 			while (tnParent.Parent != null)
 			{
@@ -769,9 +768,9 @@ namespace CodersLab.Windows.Controls
 		/// <returns>Number of visible nodes.</returns>
 		private int GetNumberOfVisibleNodes()
 		{
-			int intCounter = 0;
+			var intCounter = 0;
 
-			TreeNode tnTemp = this.Nodes[0];
+			var tnTemp = this.Nodes[0];
 
 			while (tnTemp != null)
 			{
@@ -792,7 +791,7 @@ namespace CodersLab.Windows.Controls
 		/// <returns>Last visible node.</returns>
 		private TreeNode GetLastVisibleNode()
 		{
-			TreeNode tnTemp = this.Nodes[0];
+			var tnTemp = this.Nodes[0];
 
 			while (tnTemp.NextVisibleNode != null)
 			{
@@ -811,8 +810,8 @@ namespace CodersLab.Windows.Controls
 		/// <returns>Next node.</returns>
 		private TreeNode GetNextTreeNode(TreeNode start, bool down, int intNumber)
 		{
-			int intCounter = 0;
-			TreeNode tnTemp = start;
+			var intCounter = 0;
+			var tnTemp = start;
 			while (intCounter < intNumber)
 			{
 				if (down)
@@ -843,8 +842,8 @@ namespace CodersLab.Windows.Controls
 		/// <param name="visible">True to make focus rectangle visible, false to hide it.</param>
 		private void SetFocusToNode(TreeNode tn, bool visible)
 		{
-			Graphics g = this.CreateGraphics();
-			Rectangle rect = new Rectangle(tn.Bounds.X, tn.Bounds.Y, tn.Bounds.Width, tn.Bounds.Height);
+			var g = this.CreateGraphics();
+			var rect = new Rectangle(tn.Bounds.X, tn.Bounds.Y, tn.Bounds.Width, tn.Bounds.Height);
 			if (visible)
 			{
 				this.Invalidate(rect, false);
@@ -913,7 +912,7 @@ namespace CodersLab.Windows.Controls
 #endif
 				if (!this.blnNodeProcessedOnMouseDown)
 				{
-					TreeNode tn = this.GetNodeAt(e.X, e.Y);
+					var tn = this.GetNodeAt(e.X, e.Y);
                     LastSelectedNode = tn;
 					// Mouse click has not been handled by the mouse down event, so do it here. This is the case when
 					// a selected node was clicked again; in that case we handle that click here because in case the
@@ -941,8 +940,8 @@ namespace CodersLab.Windows.Controls
 
 		private bool IsPlusMinusClicked(TreeNode tn, MouseEventArgs e)
 		{
-			int intNodeLevel = GetNodeLevel(tn);
-			bool blnPlusMinusClicked = false;
+			var intNodeLevel = GetNodeLevel(tn);
+			var blnPlusMinusClicked = false;
 			if (e.X < 20 + (intNodeLevel * 20))
 				blnPlusMinusClicked = true;
 
@@ -961,7 +960,7 @@ namespace CodersLab.Windows.Controls
 			// in OnMouseUp we seem to get always e.Clicks = 1, also when item is doubleclicked
 			intMouseClicks = e.Clicks;
 
-			TreeNode tn = this.GetNodeAt(e.X, e.Y);
+			var tn = this.GetNodeAt(e.X, e.Y);
             LastSelectedNode = tn;
 
 			if (tn == null)
@@ -982,7 +981,7 @@ namespace CodersLab.Windows.Controls
 					// Flash node. In case the node selection is cancelled by the user, this gives the effect that it
 					// was selected and unselected again.
 					tnToFlash = tn;
-					System.Threading.Thread t = new System.Threading.Thread(new System.Threading.ThreadStart(FlashNode));
+					var t = new System.Threading.Thread(new System.Threading.ThreadStart(FlashNode));
 					t.Start();
 
 					blnNodeProcessedOnMouseDown = true;
@@ -1013,7 +1012,7 @@ namespace CodersLab.Windows.Controls
 				return;
 			}
 
-			TreeNode tn = tnToFlash;
+			var tn = tnToFlash;
 			// Only flash node is it's not yet selected
 			if (!IsNodeSelected(tn))
 			{
@@ -1088,7 +1087,7 @@ namespace CodersLab.Windows.Controls
 				{
 					// CTRL and SHIFT not held down							
 					tnSelectionMirrorPoint = endNode;
-					int intNumberOfSelectedNodes = SelectedNodes.Count;
+					var intNumberOfSelectedNodes = SelectedNodes.Count;
 
 					// If it was a double click, select node and suspend further processing					
 					if (blnWasDoubleClick)
@@ -1099,7 +1098,7 @@ namespace CodersLab.Windows.Controls
 
 					if (!IsPlusMinusClicked(endNode, e))
 					{
-						bool blnNodeWasSelected = false;
+						var blnNodeWasSelected = false;
 						if (IsNodeSelected(endNode))
 							blnNodeWasSelected = true;
 
@@ -1112,7 +1111,7 @@ namespace CodersLab.Windows.Controls
 						{
 							// Node should be put in edit mode					
 							tnNodeToStartEditOn = endNode;
-							System.Threading.Thread t = new System.Threading.Thread(new System.Threading.ThreadStart(StartEdit));
+							var t = new System.Threading.Thread(new System.Threading.ThreadStart(StartEdit));
 							t.Start();
 						}
 					}
@@ -1131,7 +1130,7 @@ namespace CodersLab.Windows.Controls
 								break;
 
 							case TreeViewSelectionMode.MultiSelectSameRootBranch:
-								TreeNode tnAbsoluteParent2 = GetRootParent(endNode);
+								var tnAbsoluteParent2 = GetRootParent(endNode);
 								UnselectAllNodesNotBelongingToParent(tnAbsoluteParent2, tva);
 								break;
 
@@ -1140,13 +1139,13 @@ namespace CodersLab.Windows.Controls
 								break;
 
 							case TreeViewSelectionMode.MultiSelectSameLevelAndRootBranch:
-								TreeNode tnAbsoluteParent = GetRootParent(endNode);
+								var tnAbsoluteParent = GetRootParent(endNode);
 								UnselectAllNodesNotBelongingToParent(tnAbsoluteParent, tva);
 								UnselectAllNodesNotBelongingToLevel(GetNodeLevel(endNode), tva);
 								break;
 
 							case TreeViewSelectionMode.MultiSelectSameParent:
-								TreeNode tnParent = endNode.Parent;
+								var tnParent = endNode.Parent;
 								UnselectAllNodesNotBelongingDirectlyToParent(tnParent, tva);
 								break;
 						}
@@ -1184,7 +1183,7 @@ namespace CodersLab.Windows.Controls
                                 break;
 
                             case TreeViewSelectionMode.MultiSelectSameRootBranch:
-                                TreeNode tnAbsoluteParentStartNode = GetRootParent(startNode);
+                                var tnAbsoluteParentStartNode = GetRootParent(startNode);
                                 tnTemp = startNode;
                                 // Check each visible node from startNode to endNode and select it if needed
                                 while ((tnTemp != null) && (tnTemp != endNode))
@@ -1195,7 +1194,7 @@ namespace CodersLab.Windows.Controls
                                         tnTemp = tnTemp.NextVisibleNode;
                                     if (tnTemp != null)
                                     {
-                                        TreeNode tnAbsoluteParent = GetRootParent(tnTemp);
+                                        var tnAbsoluteParent = GetRootParent(tnTemp);
                                         if (tnAbsoluteParent == tnAbsoluteParentStartNode)
                                         {
                                             SelectNode(tnTemp, true, tva);
@@ -1218,7 +1217,7 @@ namespace CodersLab.Windows.Controls
                                         tnTemp = tnTemp.NextVisibleNode;
                                     if (tnTemp != null)
                                     {
-                                        int intNodeLevel = GetNodeLevel(tnTemp);
+                                        var intNodeLevel = GetNodeLevel(tnTemp);
                                         if (intNodeLevel == intNodeLevelStart)
                                         {
                                             SelectNode(tnTemp, true, tva);
@@ -1230,7 +1229,7 @@ namespace CodersLab.Windows.Controls
                                 break;
 
                             case TreeViewSelectionMode.MultiSelectSameLevelAndRootBranch:
-                                TreeNode tnAbsoluteParentStart = GetRootParent(startNode);
+                                var tnAbsoluteParentStart = GetRootParent(startNode);
                                 intNodeLevelStart = GetNodeLevel(startNode);
                                 tnTemp = startNode;
                                 // Check each visible node from startNode to endNode and select it if needed
@@ -1242,8 +1241,8 @@ namespace CodersLab.Windows.Controls
                                         tnTemp = tnTemp.NextVisibleNode;
                                     if (tnTemp != null)
                                     {
-                                        int intNodeLevel = GetNodeLevel(tnTemp);
-                                        TreeNode tnAbsoluteParent = GetRootParent(tnTemp);
+                                        var intNodeLevel = GetNodeLevel(tnTemp);
+                                        var tnAbsoluteParent = GetRootParent(tnTemp);
                                         if ((intNodeLevel == intNodeLevelStart) && (tnAbsoluteParent == tnAbsoluteParentStart))
                                         {
                                             SelectNode(tnTemp, true, tva);
@@ -1261,7 +1260,7 @@ namespace CodersLab.Windows.Controls
                                 break;
 
                             case TreeViewSelectionMode.MultiSelectSameParent:
-                                TreeNode tnParentStartNode = startNode.Parent;
+                                var tnParentStartNode = startNode.Parent;
                                 tnTemp = startNode;
                                 // Check each visible node from startNode to endNode and select it if needed
                                 while ((tnTemp != null) && (tnTemp != endNode))
@@ -1272,7 +1271,7 @@ namespace CodersLab.Windows.Controls
                                         tnTemp = tnTemp.NextVisibleNode;
                                     if (tnTemp != null)
                                     {
-                                        TreeNode tnParent = tnTemp.Parent;
+                                        var tnParent = tnTemp.Parent;
                                         if (tnParent == tnParentStartNode)
                                         {
                                             SelectNode(tnTemp, true, tva);
@@ -1297,7 +1296,7 @@ namespace CodersLab.Windows.Controls
 							break;
 
 						case TreeViewSelectionMode.MultiSelectSameRootBranch:
-							TreeNode tnAbsoluteParentStartNode = GetRootParent(startNode);
+							var tnAbsoluteParentStartNode = GetRootParent(startNode);
 							tnTemp = startNode;
 							// Check each visible node from startNode to endNode and select it if needed
 							while ((tnTemp != null) && (tnTemp != endNode))
@@ -1308,7 +1307,7 @@ namespace CodersLab.Windows.Controls
 									tnTemp = tnTemp.NextVisibleNode;
 								if (tnTemp != null)
 								{
-									TreeNode tnAbsoluteParent = GetRootParent(tnTemp);
+									var tnAbsoluteParent = GetRootParent(tnTemp);
 									if (tnAbsoluteParent == tnAbsoluteParentStartNode)
 									{
 										SelectNode(tnTemp, true, tva);
@@ -1330,7 +1329,7 @@ namespace CodersLab.Windows.Controls
 									tnTemp = tnTemp.NextVisibleNode;
 								if (tnTemp != null)
 								{
-									int intNodeLevel = GetNodeLevel(tnTemp);
+									var intNodeLevel = GetNodeLevel(tnTemp);
 									if (intNodeLevel == intNodeLevelStart)
 									{
 										SelectNode(tnTemp, true, tva);
@@ -1341,7 +1340,7 @@ namespace CodersLab.Windows.Controls
 							break;
 
 						case TreeViewSelectionMode.MultiSelectSameLevelAndRootBranch:
-							TreeNode tnAbsoluteParentStart = GetRootParent(startNode);
+							var tnAbsoluteParentStart = GetRootParent(startNode);
 							intNodeLevelStart = GetNodeLevel(startNode);
 							tnTemp = startNode;
 							// Check each visible node from startNode to endNode and select it if needed
@@ -1353,8 +1352,8 @@ namespace CodersLab.Windows.Controls
 									tnTemp = tnTemp.NextVisibleNode;
 								if (tnTemp != null)
 								{
-									int intNodeLevel = GetNodeLevel(tnTemp);
-									TreeNode tnAbsoluteParent = GetRootParent(tnTemp);
+									var intNodeLevel = GetNodeLevel(tnTemp);
+									var tnAbsoluteParent = GetRootParent(tnTemp);
 									if ((intNodeLevel == intNodeLevelStart) && (tnAbsoluteParent == tnAbsoluteParentStart))
 									{
 										SelectNode(tnTemp, true, tva);
@@ -1382,7 +1381,7 @@ namespace CodersLab.Windows.Controls
 							break;
 
 						case TreeViewSelectionMode.MultiSelectSameParent:
-							TreeNode tnParentStartNode = startNode.Parent;
+							var tnParentStartNode = startNode.Parent;
 							tnTemp = startNode;
 							// Check each visible node from startNode to endNode and select it if needed
 							while ((tnTemp != null) && (tnTemp != endNode))
@@ -1393,7 +1392,7 @@ namespace CodersLab.Windows.Controls
 									tnTemp = tnTemp.NextVisibleNode;
 								if (tnTemp != null)
 								{
-									TreeNode tnParent = tnTemp.Parent;
+									var tnParent = tnTemp.Parent;
 									if (tnParent == tnParentStartNode)
 									{
 										SelectNode(tnTemp, true, tva);
@@ -1448,7 +1447,7 @@ namespace CodersLab.Windows.Controls
 		/// <param name="e"></param>
 		protected override void OnKeyDown(KeyEventArgs e)
 		{
-			Keys kMod = Keys.None;
+			var kMod = Keys.None;
 			switch (e.Modifiers)
 			{
 				case Keys.Shift:
@@ -1463,7 +1462,7 @@ namespace CodersLab.Windows.Controls
 					break;
 			}
 
-			int intNumber = 0;
+			var intNumber = 0;
 
 			TreeNode tnNewlySelectedNodeWithKeys = null;
 			switch (e.KeyCode)
@@ -1575,7 +1574,7 @@ namespace CodersLab.Windows.Controls
 			blnSelectionChanged = false;
 
 			// All child nodes should be deselected
-			bool blnChildSelected = false;
+			var blnChildSelected = false;
 			foreach (TreeNode tn in e.Node.Nodes)
 			{
 				if (IsNodeSelected(tn))

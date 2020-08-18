@@ -171,10 +171,10 @@ namespace Utilities
 
 		public PropertyDescriptorCollection GetProperties(Attribute[] attributes)
 		{
-			PropertyDescriptor[] newProps = new PropertyDescriptor[this.Count];
-			for (int i = 0; i < this.Count; i++)
+			var newProps = new PropertyDescriptor[this.Count];
+			for (var i = 0; i < this.Count; i++)
 			{
-				CustomProperty  prop = (CustomProperty) this[i];
+				var  prop = (CustomProperty) this[i];
 				newProps[i] = new CustomPropertyDescriptor(ref prop, attributes);
 			}
 
@@ -329,11 +329,11 @@ namespace Utilities
                 return System.Globalization.NumberFormatInfo.CurrentInfo.NaNSymbol;
 
             // Translate the double into sign, exponent and mantissa.
-            long bits = BitConverter.DoubleToInt64Bits(d);
+            var bits = BitConverter.DoubleToInt64Bits(d);
             // Note that the shift is sign-extended, hence the test against -1 not 1
-            bool negative = (bits < 0);
-            int exponent = (int)((bits >> 52) & 0x7ffL);
-            long mantissa = bits & 0xfffffffffffffL;
+            var negative = (bits < 0);
+            var exponent = (int)((bits >> 52) & 0x7ffL);
+            var mantissa = bits & 0xfffffffffffffL;
 
             // Subnormal numbers; exponent is effectively one higher,
             // but there's no extra normalisation bit in the mantissa
@@ -366,21 +366,21 @@ namespace Utilities
             }
 
             /// Construct a new decimal expansion with the mantissa
-            ArbitraryDecimal ad = new ArbitraryDecimal(mantissa);
+            var ad = new ArbitraryDecimal(mantissa);
 
             // If the exponent is less than 0, we need to repeatedly
             // divide by 2 - which is the equivalent of multiplying
             // by 5 and dividing by 10.
             if (exponent < 0)
             {
-                for (int i = 0; i < -exponent; i++)
+                for (var i = 0; i < -exponent; i++)
                     ad.MultiplyBy(5);
                 ad.Shift(-exponent);
             }
             // Otherwise, we need to repeatedly multiply by 2
             else
             {
-                for (int i = 0; i < exponent; i++)
+                for (var i = 0; i < exponent; i++)
                     ad.MultiplyBy(2);
             }
 
@@ -407,9 +407,9 @@ namespace Utilities
             /// </summary>
             internal ArbitraryDecimal(long x)
             {
-                string tmp = x.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                var tmp = x.ToString(System.Globalization.CultureInfo.InvariantCulture);
                 digits = new byte[tmp.Length];
-                for (int i = 0; i < tmp.Length; i++)
+                for (var i = 0; i < tmp.Length; i++)
                     digits[i] = (byte)(tmp[i] - '0');
                 Normalize();
             }
@@ -420,10 +420,10 @@ namespace Utilities
             /// </summary>
             internal void MultiplyBy(int amount)
             {
-                byte[] result = new byte[digits.Length + 1];
-                for (int i = digits.Length - 1; i >= 0; i--)
+                var result = new byte[digits.Length + 1];
+                for (var i = digits.Length - 1; i >= 0; i--)
                 {
-                    int resultDigit = digits[i] * amount + result[i + 1];
+                    var resultDigit = digits[i] * amount + result[i + 1];
                     result[i] = (byte)(resultDigit / 10);
                     result[i + 1] = (byte)(resultDigit % 10);
                 }
@@ -466,8 +466,8 @@ namespace Utilities
                 if (first == 0 && last == digits.Length - 1)
                     return;
 
-                byte[] tmp = new byte[last - first + 1];
-                for (int i = 0; i < tmp.Length; i++)
+                var tmp = new byte[last - first + 1];
+                for (var i = 0; i < tmp.Length; i++)
                     tmp[i] = digits[i + first];
 
                 decimalPoint -= digits.Length - (last + 1);
@@ -479,8 +479,8 @@ namespace Utilities
             /// </summary>
             public override String ToString()
             {
-                char[] digitString = new char[digits.Length];
-                for (int i = 0; i < digits.Length; i++)
+                var digitString = new char[digits.Length];
+                for (var i = 0; i < digits.Length; i++)
                     digitString[i] = (char)(digits[i] + '0');
 
                 // Simplest case - nothing after the decimal point,
@@ -531,12 +531,12 @@ namespace Utilities
         {
             get
             { 
-                int value = 0;
+                var value = 0;
 
                 if (name.IndexOf(',') != -1)
                 {
-                    int num = 0;
-                    foreach (string str2 in name.Split(new char[] { ',' }))
+                    var num = 0;
+                    foreach (var str2 in name.Split(new char[] { ',' }))
                     {
                         m_stringIndex.TryGetValue(str2.Trim(), out value);
                         num |= value;
@@ -554,8 +554,8 @@ namespace Utilities
             {
                 if (IsFlag)
                 {
-                    string str = "";
-                    foreach (KeyValuePair<string, int> entry in m_stringIndex)
+                    var str = "";
+                    foreach (var entry in m_stringIndex)
                     {
                         if ((value & entry.Value) > 0 || (entry.Value == 0 && value == 0)) str += ", " + entry.Key;
                     }
@@ -596,7 +596,7 @@ namespace Utilities
 
         public void CopyTo(Array array, int index)
         {
-            int i = 0;
+            var i = 0;
             foreach (KeyValuePair<string, int> entry in this)
                 array.SetValue(entry, i++ + index);
         }
@@ -625,7 +625,7 @@ namespace Utilities
         private static bool is_number(string str)
         {
             if (string.IsNullOrWhiteSpace(str) || str.Length == 0) return false;
-            for (int i = 0; i < str.Length; i++)
+            for (var i = 0; i < str.Length; i++)
                 if (!char.IsNumber(str, i)) return false;
             return true;
         }
@@ -634,7 +634,7 @@ namespace Utilities
         {
             if (value is string && value != null)
             {
-                string str = (string)value;
+                var str = (string)value;
                 str = str.Trim();
 
                 if (m_e.Contains(str)) return m_e[str];
@@ -676,7 +676,7 @@ namespace Utilities
                 else if (value is KeyValuePair<string, int>)
                     return ((KeyValuePair<string, int>)value).Key;
 
-                int val = (int)Convert.ChangeType(value, typeof(int));
+                var val = (int)Convert.ChangeType(value, typeof(int));
                 return m_e[val];
             }
             return base.ConvertTo(context, culture, value, destinationType);
@@ -701,7 +701,7 @@ namespace Utilities
         {
             if (value is string) return m_e.Contains((string)value);
 
-            int val = (int)Convert.ChangeType(value, typeof(int));
+            var val = (int)Convert.ChangeType(value, typeof(int));
             return m_e.Contains(val);
         }
     }
@@ -752,7 +752,7 @@ namespace Utilities
                  value is BacnetObjectId)
             {
 
-                BacnetObjectId objId = (BacnetObjectId)value;
+                var objId = (BacnetObjectId)value;
 
                 return objId.type +
                        ":" + objId.instance;
@@ -767,7 +767,7 @@ namespace Utilities
             {
                 try
                 {
-                    string[] s = (value as String).Split(':');
+                    var s = (value as String).Split(':');
                     return new BacnetObjectId((BacnetObjectTypes)Enum.Parse(typeof(BacnetObjectTypes), s[0]), Convert.ToUInt16(s[1]));
                 }
                 catch { return null; }
@@ -804,7 +804,7 @@ namespace Utilities
             if (destinationType == typeof(System.String) &&
                  value is BacnetDeviceObjectPropertyReference)
             {
-                BacnetDeviceObjectPropertyReference pr = (BacnetDeviceObjectPropertyReference)value;
+                var pr = (BacnetDeviceObjectPropertyReference)value;
 
                 return "Reference to " +pr.objectIdentifier.ToString();
             }
@@ -823,7 +823,7 @@ namespace Utilities
                     // and remember that PRESENT_VALUE = 85
                     // entry like OBJECT_ANALOG_INPUT:0:85 or OBJECT_ANALOG_INPUT:0:85:478 for device 478
                     //
-                    string[] s = (value as String).Split(':');
+                    var s = (value as String).Split(':');
                     if (s.Length == 4)
                         return new BacnetDeviceObjectPropertyReference(
                                 new BacnetObjectId((BacnetObjectTypes)Enum.Parse(typeof(BacnetObjectTypes), s[0]), Convert.ToUInt16(s[1])),
@@ -912,7 +912,7 @@ namespace Utilities
              if (destinationType == typeof(System.String) &&
                  value is DateTime)
              {
-                 DateTime dt = (DateTime)value;
+                 var dt = (DateTime)value;
 
                  return dt.ToLongTimeString();
              }
@@ -949,7 +949,7 @@ namespace Utilities
 
             if (this.editorService != null)
             {
-                DateTime dt= (DateTime)value;
+                var dt= (DateTime)value;
                 // this value is 1/1/1 for the date,  DatetimePicket don't accept it
                 picker.Value = new DateTime(2000, 1, 1, dt.Hour, dt.Minute, dt.Second); // only HH:MM:SS is important
                 this.editorService.DropDownControl(picker);
@@ -1009,9 +1009,9 @@ namespace Utilities
             }
             if (this.editorService != null)
             {
-                String bbs = value.ToString();
+                var bbs = value.ToString();
 
-                for (int i=0;i<bbs.Length;i++)
+                for (var i=0;i<bbs.Length;i++)
                 {
                     try
                     {
@@ -1090,15 +1090,15 @@ namespace Utilities
             }
             if (this.editorService != null)
             {
-                int InitialIdx = (int)(uint)value;
+                var InitialIdx = (int)(uint)value;
 
                 if (EnumList == null)
                 {
                     EnumList = new ListBox();
                     EnumList.Click += new EventHandler(EnumList_Click);
                     // get all the Enum values string
-                    String[] sl=Enum.GetNames(currentPropertyEnum.GetType());
-                    for (int i = 0; i < sl.Length; i++)
+                    var sl=Enum.GetNames(currentPropertyEnum.GetType());
+                    for (var i = 0; i < sl.Length; i++)
                     {
                         if ((currentPropertyEnum.GetType() == typeof(BacnetObjectTypes)) && (i >= (int)BacnetObjectTypes.MAX_ASHRAE_OBJECT_TYPE))
                             break; // One property with some content not usefull
@@ -1141,7 +1141,7 @@ namespace Utilities
             if (destinationType == typeof(System.String) &&
                 value is uint)
             {
-                int i = (int)(uint)value;
+                var i = (int)(uint)value;
                 return i.ToString() + " : " + BacnetEnumValueDisplay.GetNiceName(Enum.GetName(currentPropertyEnum.GetType(), (uint)i));
             }
             else
@@ -1183,7 +1183,7 @@ namespace Utilities
                 {
                     if (m_enum!=null)
                     {
-                        string s = Enum.GetValues(m_enum.GetType()).GetValue(m_idx).ToString();
+                        var s = Enum.GetValues(m_enum.GetType()).GetValue(m_idx).ToString();
                         s = s.Replace('_', ' ');
                         return System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(s.ToLower());
                     }
@@ -1211,18 +1211,18 @@ namespace Utilities
         {
             try
             {
-                PropertyDescriptorCollection s = base.GetProperties(context, value, attributes);
-                PropertyDescriptorCollection pds = new PropertyDescriptorCollection(null);
+                var s = base.GetProperties(context, value, attributes);
+                var pds = new PropertyDescriptorCollection(null);
 
                 // PriorityArray is a C# 0 base array for a Bacnet 1 base array
                 // use also for StateText property array in multistate objects : http://www.chipkin.com/bacnet-multi-state-variables-state-zero/
-                int shift=0;
+                var shift=0;
                 if ((_e==null) || (_e.GetType() == typeof(BacnetWritePriority)))
                         shift = 1;
 
-                for (int i = 0; i < s.Count; i++)
+                for (var i = 0; i < s.Count; i++)
                 {
-                    BacnetArrayPropertyDescriptor pd = new BacnetArrayPropertyDescriptor(s[i], i + shift, _e);
+                    var pd = new BacnetArrayPropertyDescriptor(s[i], i + shift, _e);
                     pds.Add(pd);
                 }
                 return pds;
@@ -1341,7 +1341,7 @@ namespace Utilities
                 else if (m_Property.bacnetApplicationTags == BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME) return new BacnetTimeConverter();
 
                 // A lot of classic Bacnet Enum
-                BacnetPropertyReference bpr = (BacnetPropertyReference)m_Property.Tag;
+                var bpr = (BacnetPropertyReference)m_Property.Tag;
                 switch ((BacnetPropertyIds)bpr.propertyIdentifier)
                 {
                     case BacnetPropertyIds.PROP_OBJECT_TYPE:
@@ -1396,7 +1396,7 @@ namespace Utilities
             // All Bacnet Time as this
             if (m_Property.bacnetApplicationTags == BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME) return new BacnetTimePickerEditor();
             
-            BacnetPropertyReference bpr=(BacnetPropertyReference)m_Property.Tag;
+            var bpr=(BacnetPropertyReference)m_Property.Tag;
 
             // A lot of classic Bacnet Enum & BitString
             switch ((BacnetPropertyIds)bpr.propertyIdentifier)

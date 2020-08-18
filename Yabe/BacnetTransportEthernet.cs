@@ -28,12 +28,7 @@
 *
 *********************************************************************/
 
-using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Linq;
-using System.IO.BACnet.Serialize;
-using System.Diagnostics;
 using SharpPcap;
 using SharpPcap.LibPcap;
 
@@ -121,7 +116,7 @@ namespace System.IO.BACnet
             // filter to only bacnet packets
             _device.Filter = "ether proto 0x82";
 
-            System.Threading.Thread th = new Threading.Thread(CaptureThread);
+            var th = new Threading.Thread(CaptureThread);
             th.IsBackground = true;
             th.Start();
         }
@@ -133,7 +128,7 @@ namespace System.IO.BACnet
             {
                 try
                 {
-                    RawCapture packet = _device.GetNextPacket();
+                    var packet = _device.GetNextPacket();
                     if (packet != null)
                         OnPacketArrival(packet);
                     else
@@ -148,7 +143,7 @@ namespace System.IO.BACnet
             // check to see if the source mac 100%
             // matches the device mac address of the local device
 
-            for (int i = 0; i < 6; i++)
+            for (var i = 0; i < 6; i++)
             {
                 if (buffer[offset + i] != _deviceMac[i])
                     return false;
@@ -159,7 +154,7 @@ namespace System.IO.BACnet
 
         byte[] Mac(byte[] buffer, int offset)
         {
-            byte[] b = new byte[6];
+            var b = new byte[6];
             Buffer.BlockCopy(buffer, offset, b, 0, 6);
             return b;
         }
@@ -170,21 +165,21 @@ namespace System.IO.BACnet
             if (packet.Data.Length <= 17)
                 return;
 
-            byte[] buffer = packet.Data;
-            int offset = 0;
+            var buffer = packet.Data;
+            var offset = 0;
 
             int length;
             byte dsap, ssap, control;
 
             // Got frames send by me, not for me, not broadcast
-            byte[] dest = Mac(buffer, offset);
+            var dest = Mac(buffer, offset);
             if (!_isOutboundPacket(dest, 0) && (dest[0] != 255))
                 return;
 
             offset += 6;
 
             // source address
-            BacnetAddress Bac_source = new BacnetAddress(BacnetAddressTypes.Ethernet, 0, Mac(buffer, offset));
+            var Bac_source = new BacnetAddress(BacnetAddressTypes.Ethernet, 0, Mac(buffer, offset));
             offset += 6;
 
             // len
@@ -208,13 +203,13 @@ namespace System.IO.BACnet
 
         public int Send(byte[] buffer, int offset, int data_length, BacnetAddress address, bool wait_for_transmission, int timeout)
         {
-            int hdr_offset = 0;
+            var hdr_offset = 0;
 
-            for (int i = 0; i < 6; i++)
+            for (var i = 0; i < 6; i++)
                 buffer[hdr_offset++] = address.adr[i];
 
             // write the source mac address bytes
-            for (int i = 0; i < 6; i++)
+            for (var i = 0; i < 6; i++)
                 buffer[hdr_offset++] = _deviceMac[i];
 
             // the next 2 bytes are used for the packet length

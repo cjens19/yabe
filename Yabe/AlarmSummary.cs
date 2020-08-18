@@ -25,14 +25,8 @@
 *********************************************************************/
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using System.IO.BACnet;
-using System.IO.BACnet.Serialize;
 using System.Diagnostics;
 
 namespace Yabe
@@ -109,11 +103,11 @@ namespace Yabe
             TAlarmList.BeginUpdate();
 
             // Only one network read request to get the object name
-            int _retries = comm.Retries;
+            var _retries = comm.Retries;
             comm.Retries = 1;
 
             // fill the Treenode
-            foreach (BacnetGetEventInformationData alarm in Alarms)
+            foreach (var alarm in Alarms)
             {
                 if ((alarm.acknowledgedTransitions.ToString() != "111")||(alarm.eventState!=BacnetEventNotificationData.BacnetEventStates.EVENT_STATE_NORMAL))
                 {
@@ -128,7 +122,7 @@ namespace Yabe
                     {
                         // Get the property Name, network activity, time consuming
                         IList<BacnetValue> name;
-                        bool retcode = comm.ReadPropertyRequest(adr, alarm.objectIdentifier, BacnetPropertyIds.PROP_OBJECT_NAME, out name);
+                        var retcode = comm.ReadPropertyRequest(adr, alarm.objectIdentifier, BacnetPropertyIds.PROP_OBJECT_NAME, out name);
 
                         if (retcode)
                         {
@@ -156,12 +150,12 @@ namespace Yabe
 
                     if (Properties.Settings.Default.ShowDescriptionWhenUsefull)
                     {
-                        String Descr = "";
+                        var Descr = "";
                         try
                         {
                             // Get the Description, network activity, time consuming
                             IList<BacnetValue> name;
-                            bool retcode = comm.ReadPropertyRequest(adr, alarm.objectIdentifier, BacnetPropertyIds.PROP_DESCRIPTION, out name);
+                            var retcode = comm.ReadPropertyRequest(adr, alarm.objectIdentifier, BacnetPropertyIds.PROP_DESCRIPTION, out name);
 
                             if (retcode)
                                 Descr = name[0].Value.ToString();
@@ -175,14 +169,14 @@ namespace Yabe
                     currentTn.Nodes.Add(new TreeNode("Alarm state : " + GetEventStateNiceName(alarm.eventState.ToString()), icon, icon));
 
 
-                    TreeNode tn2 = new TreeNode("Ack Required :", icon, icon);
-                    bool ackrequired = false;
-                    for (int i = 0; i < 3; i++)
+                    var tn2 = new TreeNode("Ack Required :", icon, icon);
+                    var ackrequired = false;
+                    for (var i = 0; i < 3; i++)
                     {
                         if (alarm.acknowledgedTransitions.ToString()[i] == '0')
                         {
-                            BacnetEventNotificationData.BacnetEventEnable bee = (BacnetEventNotificationData.BacnetEventEnable)(1 << i);
-                            String text = GetEventEnableNiceName(bee.ToString()) + " since " + alarm.eventTimeStamps[i].Time.ToString();
+                            var bee = (BacnetEventNotificationData.BacnetEventEnable)(1 << i);
+                            var text = GetEventEnableNiceName(bee.ToString()) + " since " + alarm.eventTimeStamps[i].Time.ToString();
                             tn2.Nodes.Add(new TreeNode(text, icon, icon));
                             ackrequired = true;
                         }
@@ -209,8 +203,8 @@ namespace Yabe
 
         private bool AcqAlarm(BacnetGetEventInformationData alarm)
         {
-            bool SomeChanges = false;
-            for (int i = 0; i < 3; i++) // 3 transitions maybe to be ack To_Normal, To_OfNormal, To_Fault
+            var SomeChanges = false;
+            for (var i = 0; i < 3; i++) // 3 transitions maybe to be ack To_Normal, To_OfNormal, To_Fault
             {
                 if (alarm.acknowledgedTransitions.ToString()[i] == '0') // Transition to be ack, 1 means ok/already done
                 {
@@ -227,14 +221,14 @@ namespace Yabe
                             Trace.TraceWarning("Error reading PROP_EVENT_TIME_STAMPS");
                             return false;
                         }
-                        String s1 = ((BacnetValue[])(values[0].Value))[0].ToString(); // Date & 00:00:00 for Hour
-                        String s2 = ((BacnetValue[])(values[0].Value))[1].ToString(); // 00:00:00 & Time
-                        DateTime dt = Convert.ToDateTime(s1.Split(' ')[0] + " " + s2.Split(' ')[1]);
+                        var s1 = ((BacnetValue[])(values[0].Value))[0].ToString(); // Date & 00:00:00 for Hour
+                        var s2 = ((BacnetValue[])(values[0].Value))[1].ToString(); // 00:00:00 & Time
+                        var dt = Convert.ToDateTime(s1.Split(' ')[0] + " " + s2.Split(' ')[1]);
                         bgt = new BacnetGenericTime(dt, BacnetTimestampTags.TIME_STAMP_DATETIME);
                     }
 
                     // something to clarify : BacnetEventStates or BacnetEventEnable !!!
-                    BacnetEventNotificationData.BacnetEventStates eventstate = (BacnetEventNotificationData.BacnetEventStates)(2 - i);
+                    var eventstate = (BacnetEventNotificationData.BacnetEventStates)(2 - i);
 
                     if (comm.AlarmAcknowledgement(adr, alarm.objectIdentifier, eventstate, AckText.Text, bgt,
                                 new BacnetGenericTime(DateTime.Now, BacnetTimestampTags.TIME_STAMP_DATETIME)) == true)
@@ -250,19 +244,19 @@ namespace Yabe
 
         private void AckBt_Click(object sender, EventArgs e)
         {
-            List<TreeNode> listacq = new List<TreeNode>();
+            var listacq = new List<TreeNode>();
 
             foreach (TreeNode t in TAlarmList.SelectedNodes)
             {
-                TreeNode t2 = t;
+                var t2 = t;
                 while (t2.Parent != null) t2 = t2.Parent;  // go to the root element
                 if (!listacq.Exists((o) => o == t2))
                     listacq.Add(t2);
             }
 
-            foreach (TreeNode t in listacq)
+            foreach (var t in listacq)
             {
-                BacnetGetEventInformationData alarm = (BacnetGetEventInformationData)t.Tag; // the alam content
+                var alarm = (BacnetGetEventInformationData)t.Tag; // the alam content
                 AcqAlarm(alarm);
             }
       
@@ -272,12 +266,12 @@ namespace Yabe
         // Used if the Read without retries has fail
         private void TAlarmList_AfterSelect(object sender, TreeViewEventArgs e)
         {
-            TreeNode tn=e.Node;
+            var tn=e.Node;
             while (tn.Parent != null) tn = tn.Parent;
 
             if (tn.ToolTipText == "")
             {
-                BacnetGetEventInformationData alarm = (BacnetGetEventInformationData)tn.Tag;
+                var alarm = (BacnetGetEventInformationData)tn.Tag;
                 IList<BacnetValue> name;
 
                 comm.ReadPropertyRequest(adr, alarm.objectIdentifier, BacnetPropertyIds.PROP_OBJECT_NAME, out name);

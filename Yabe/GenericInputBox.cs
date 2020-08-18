@@ -56,7 +56,7 @@ namespace System.Windows.Forms
 
             if (ToolTipText != null)
             {
-                ToolTip t = new ToolTip();
+                var t = new ToolTip();
                 t.SetToolTip(genericInput, ToolTipText);
                 t.SetToolTip(genericLbl, ToolTipText);
             }

@@ -26,7 +26,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.IO.BACnet;
 
 namespace Yabe
@@ -67,9 +66,9 @@ namespace Yabe
                 throw new System.IO.IOException("Couldn't open file", ex);
             }
 
-            int position = 0;
-            uint count = (uint)comm.GetFileBufferMaxSize();
-            bool end_of_file = false;
+            var position = 0;
+            var count = (uint)comm.GetFileBufferMaxSize();
+            var end_of_file = false;
             byte[] buffer;
             int buffer_offset;
             try
@@ -110,16 +109,16 @@ namespace Yabe
                 throw new System.IO.IOException("Couldn't open file", ex);
             }
 
-            BacnetMaxSegments old_segments = comm.MaxSegments;
+            var old_segments = comm.MaxSegments;
             comm.MaxSegments = BacnetMaxSegments.MAX_SEG65;     //send as many segments as needed
             comm.ProposedWindowSize = Properties.Settings.Default.Segments_ProposedWindowSize;      //set by options
             comm.ForceWindowSize = true;
             try
             {
-                int position = 0;
+                var position = 0;
                 //uint count = (uint)comm.GetFileBufferMaxSize() * 20;     //this is more realistic
                 uint count = 50000;                                        //this is more difficult
-                bool end_of_file = false;
+                var end_of_file = false;
                 byte[] buffer;
                 int buffer_offset;
                 while (!end_of_file && !Cancel)
@@ -164,25 +163,25 @@ namespace Yabe
                 throw new System.IO.IOException("Couldn't open file", ex);
             }
 
-            uint max_count = (uint)comm.GetFileBufferMaxSize();
-            BacnetAsyncResult[] transfers = new BacnetAsyncResult[50];
-            byte old_max_info_frames = comm.Transport.MaxInfoFrames;
+            var max_count = (uint)comm.GetFileBufferMaxSize();
+            var transfers = new BacnetAsyncResult[50];
+            var old_max_info_frames = comm.Transport.MaxInfoFrames;
             comm.Transport.MaxInfoFrames = 50;      //increase max_info_frames so that we can occupy line more. This might be against 'standard'
 
             try
             {
-                int position = 0;
-                bool eof = false;
+                var position = 0;
+                var eof = false;
 
                 while (!eof && !Cancel)
                 {
                     //start many async transfers
-                    for (int i = 0; i < transfers.Length; i++)
+                    for (var i = 0; i < transfers.Length; i++)
                         transfers[i] = (BacnetAsyncResult)comm.BeginReadFileRequest(adr, object_id, position + i * (int)max_count, max_count, false);
 
                     //wait for all transfers to finish
-                    int current = 0;
-                    int retries = comm.Retries;
+                    var current = 0;
+                    var retries = comm.Retries;
                     while (current < transfers.Length)
                     {
                         if (!transfers[current].WaitForDone(comm.Timeout))
@@ -241,9 +240,9 @@ namespace Yabe
 
             try
             {
-                int position = 0;
-                int count = comm.GetFileBufferMaxSize();
-                byte[] buffer = new byte[count];
+                var position = 0;
+                var count = comm.GetFileBufferMaxSize();
+                var buffer = new byte[count];
                 while (count > 0 && !Cancel)
                 {
                     //read from disk

@@ -25,14 +25,9 @@
 *********************************************************************/
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using System.IO.BACnet;
-using System.IO.BACnet.Serialize;
 using System.Windows.Forms.Calendar;
 using System.Globalization;
 
@@ -86,7 +81,7 @@ namespace Yabe
         {
             try
             {
-                List<BacnetValue> v = new List<BacnetValue>();
+                var v = new List<BacnetValue>();
                 v.Add(new BacnetValue(calendarEntries));
                 comm.WritePropertyRequest(adr, object_id, BacnetPropertyIds.PROP_DATE_LIST, v);
             }
@@ -101,8 +96,8 @@ namespace Yabe
 
         private void SetCalendarDisplayDate (DateTime d)
         {
-            DateTime start = new DateTime(d.Year, d.Month, 1);
-            DateTime stop = start.AddMonths(1).AddHours(-1);
+            var start = new DateTime(d.Year, d.Month, 1);
+            var stop = start.AddMonths(1).AddHours(-1);
 
             CalendarStartRequested = start;
 
@@ -122,10 +117,10 @@ namespace Yabe
                 return;
             }
 
-            object o = listEntries.Items[listEntries.SelectedIndex];
+            var o = listEntries.Items[listEntries.SelectedIndex];
             if (o is BacnetDateRange)
             {
-                BacnetDateRange bdr = (BacnetDateRange)o;
+                var bdr = (BacnetDateRange)o;
 
                 if (bdr.startDate.year != 255)
                     SetCalendarDisplayDate(bdr.startDate.toDateTime());
@@ -134,7 +129,7 @@ namespace Yabe
             }
             else if (o is BacnetDate)
             {
-                BacnetDate bd = (BacnetDate)o;
+                var bd = (BacnetDate)o;
                 if (!bd.IsPeriodic)
                     SetCalendarDisplayDate(bd.toDateTime());
             }
@@ -145,7 +140,7 @@ namespace Yabe
             DateTime start, end;
             start = new DateTime(_start.Year, _start.Month, _start.Day, 0, 0, 0);
             end = new DateTime(_end.Year, _end.Month, _end.Day, 23, 59, 59);
-            CalendarItem ci = new CalendarItem(calendarView, start, end, Text);
+            var ci = new CalendarItem(calendarView, start, end, Text);
             ci.ApplyColor(color);
             ci.Tag = tag;
 
@@ -159,10 +154,10 @@ namespace Yabe
             {
                 if (e is BacnetDate)
                 {
-                    BacnetDate bd = (BacnetDate)e;
+                    var bd = (BacnetDate)e;
                     if (bd.IsPeriodic)
                     {
-                        foreach (CalendarDay dt in calendarView.Days)
+                        foreach (var dt in calendarView.Days)
                             if (bd.IsAFittingDate(dt.Date))
                                 AddCalendarEntry(dt.Date,dt.Date, Color.Blue,"Periodic",bd);
                     }
@@ -171,7 +166,7 @@ namespace Yabe
                 }
                 else if (e is BacnetDateRange) 
                 {
-                    BacnetDateRange bdr = (BacnetDateRange)e;
+                    var bdr = (BacnetDateRange)e;
                     DateTime start,end;
 
                     if (bdr.startDate.year != 255)
@@ -182,7 +177,7 @@ namespace Yabe
                         end = new DateTime(bdr.endDate.year+1900, bdr.endDate.month, bdr.endDate.day, 23, 59, 59);
                     else
                         end = DateTime.MaxValue;
-                    CalendarItem ci = new CalendarItem(calendarView, start, end, "");
+                    var ci = new CalendarItem(calendarView, start, end, "");
                     ci.ApplyColor(Color.Yellow);
                     ci.Tag = bdr;
 
@@ -191,8 +186,8 @@ namespace Yabe
                 }
                 else
                 {
-                    BacnetweekNDay bwnd = (BacnetweekNDay)e;
-                    foreach (CalendarDay dt in calendarView.Days)
+                    var bwnd = (BacnetweekNDay)e;
+                    foreach (var dt in calendarView.Days)
                         if (bwnd.IsAFittingDate(dt.Date))
                             AddCalendarEntry(dt.Date, dt.Date, Color.Red, "Periodic", bwnd);
                 }
@@ -214,7 +209,7 @@ namespace Yabe
         
         private void calendarView_ItemSelected(object sender, CalendarItemEventArgs e)
         {
-            int Idx=listEntries.Items.IndexOf(e.Item.Tag);
+            var Idx=listEntries.Items.IndexOf(e.Item.Tag);
             listEntries.SelectedIndex = Idx;
             InternalListeEntriesSelect = true;
         }
@@ -223,13 +218,13 @@ namespace Yabe
         {
             if ((e.Item.StartDate.Year == e.Item.EndDate.Year) && (e.Item.StartDate.Month == e.Item.EndDate.Month) && (e.Item.StartDate.Day == e.Item.EndDate.Day))
             {
-                BacnetDate newbd = new BacnetDate((byte)(e.Item.StartDate.Year-1900), (byte)e.Item.StartDate.Month, (byte)e.Item.StartDate.Day);
+                var newbd = new BacnetDate((byte)(e.Item.StartDate.Year-1900), (byte)e.Item.StartDate.Month, (byte)e.Item.StartDate.Day);
                 listEntries.Items.Add(newbd);
                 calendarEntries.Entries.Add(newbd);
             }
             else
             {
-                BacnetDateRange newbdr = new BacnetDateRange();
+                var newbdr = new BacnetDateRange();
                 newbdr.startDate = new BacnetDate((byte)(e.Item.StartDate.Year-1900), (byte)e.Item.StartDate.Month, (byte)e.Item.StartDate.Day);
                 newbdr.endDate = new BacnetDate((byte)(e.Item.EndDate.Year-1900), (byte)e.Item.EndDate.Month, (byte)e.Item.EndDate.Day);
                 listEntries.Items.Add(newbdr);
@@ -240,7 +235,7 @@ namespace Yabe
 
         private void calendarView_ItemDatesChanged(object sender, CalendarItemEventArgs e)
         {
-            object o = e.Item.Tag;
+            var o = e.Item.Tag;
 
             if (((o is BacnetDate)&&(((BacnetDate)o).IsPeriodic))||( o is BacnetweekNDay))
             {
@@ -251,19 +246,19 @@ namespace Yabe
             //(o is BacnetDate) || (o is BacnetDateRange)
             {
                 calendarEntries.Entries.Remove(o);
-                int Idx = listEntries.Items.IndexOf(o);
+                var Idx = listEntries.Items.IndexOf(o);
 
                 listEntries.Items.Remove(o);
 
                 if ((e.Item.StartDate.Year == e.Item.EndDate.Year)&&(e.Item.StartDate.Month == e.Item.EndDate.Month)&&(e.Item.StartDate.Day == e.Item.EndDate.Day))
                 {
-                    BacnetDate newbd = new BacnetDate((byte)(e.Item.StartDate.Year-1900), (byte)e.Item.StartDate.Month, (byte)e.Item.StartDate.Day);
+                    var newbd = new BacnetDate((byte)(e.Item.StartDate.Year-1900), (byte)e.Item.StartDate.Month, (byte)e.Item.StartDate.Day);
                     listEntries.Items.Insert(Idx, newbd);
                     calendarEntries.Entries.Add(newbd);
                 }
                 else
                 {
-                    BacnetDateRange newbdr = new BacnetDateRange();
+                    var newbdr = new BacnetDateRange();
                     newbdr.startDate = new BacnetDate((byte)(e.Item.StartDate.Year-1900), (byte)e.Item.StartDate.Month, (byte)e.Item.StartDate.Day);
                     newbdr.endDate = new BacnetDate((byte)(e.Item.EndDate.Year-1900), (byte)e.Item.EndDate.Month, (byte)e.Item.EndDate.Day);
                     listEntries.Items.Insert(Idx, newbdr);
@@ -299,12 +294,12 @@ namespace Yabe
 
         private void addToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            BacnetweekNDay bwd = new BacnetweekNDay(1, 1);
-            CalendarEntryEdit Edit = new CalendarEntryEdit(bwd);
+            var bwd = new BacnetweekNDay(1, 1);
+            var Edit = new CalendarEntryEdit(bwd);
             Edit.ShowDialog();
             if (Edit.OutOK)
             {
-                object o = Edit.GetBackEntry();
+                var o = Edit.GetBackEntry();
                 listEntries.Items.Add(o);
                 calendarEntries.Entries.Add(o);
                 SetCalendarDisplayDate(CalendarStartRequested);
@@ -316,15 +311,15 @@ namespace Yabe
             if (listEntries.SelectedIndex == -1) return;
             try
             {
-                object selected = listEntries.SelectedItem;
-                CalendarEntryEdit Edit = new CalendarEntryEdit(listEntries.SelectedItem);
+                var selected = listEntries.SelectedItem;
+                var Edit = new CalendarEntryEdit(listEntries.SelectedItem);
                 Edit.ShowDialog();
                 if (Edit.OutOK)
                 {
-                    object o = Edit.GetBackEntry();
+                    var o = Edit.GetBackEntry();
 
                     calendarEntries.Entries.Remove(listEntries.SelectedItem);
-                    int Idx = listEntries.SelectedIndex;
+                    var Idx = listEntries.SelectedIndex;
 
                     try // Don't understand, exception, but all is OK , and the job is done !
                     {
@@ -362,17 +357,17 @@ namespace Yabe
         {
             InitializeComponent();
 
-            for (int i = 1; i < 7; i++)
+            for (var i = 1; i < 7; i++)
                 wday.Items.Add(CultureInfo.CurrentCulture.DateTimeFormat.DayNames[i]);
             wday.Items.Add(CultureInfo.CurrentCulture.DateTimeFormat.DayNames[0]);
             wday.Items.Add("****");
 
-            for (int i = 1; i < 32; i++)
+            for (var i = 1; i < 32; i++)
                 day.Items.Add(i);
             day.Items.Add("Last");
             day.Items.Add("**");
 
-            for (int i = 0; i < 12; i++)
+            for (var i = 0; i < 12; i++)
                 month.Items.Add(CultureInfo.CurrentCulture.DateTimeFormat.MonthNames[i]);
             month.Items.Add("Odd");
             month.Items.Add("Even");
@@ -400,7 +395,7 @@ namespace Yabe
                 week.Visible = false;
                 DateGrp.Location = dateRangeGrp.Location;
 
-                BacnetDate bd = (BacnetDate)entry;
+                var bd = (BacnetDate)entry;
 
                 if (bd.wday != 255)
                     wday.SelectedIndex = bd.wday - 1;
@@ -427,7 +422,7 @@ namespace Yabe
             {
                 dateRangeGrp.Visible = true;
                 DateGrp.Visible = false;
-                BacnetDateRange bdr = (BacnetDateRange)entry;
+                var bdr = (BacnetDateRange)entry;
 
                 if (bdr.startDate.year != 255)
                     startDate.Value = bdr.startDate.toDateTime();
@@ -449,7 +444,7 @@ namespace Yabe
                 day.Visible = false;
                 month.Location=new Point(month.Location.X+50,month.Location.Y);
 
-                BacnetweekNDay bwd = (BacnetweekNDay)entry;
+                var bwd = (BacnetweekNDay)entry;
 
                 if (bwd.wday != 255)
                     wday.SelectedIndex = bwd.wday - 1;
@@ -472,7 +467,7 @@ namespace Yabe
         {
             if (Entry is BacnetDate)
             {
-                BacnetDate bd = new BacnetDate();
+                var bd = new BacnetDate();
 
                 if (wday.SelectedIndex == 7)
                     bd.wday = 255;
@@ -489,7 +484,7 @@ namespace Yabe
                 else
                     bd.month = (byte)(month.SelectedIndex + 1);
 
-                int valyear = 255;
+                var valyear = 255;
                 try
                 {
                     valyear = Convert.ToInt32(year.Text) - 1900;
@@ -504,7 +499,7 @@ namespace Yabe
 
             if (Entry is BacnetDateRange)
             {
-                BacnetDateRange bdr = new BacnetDateRange();
+                var bdr = new BacnetDateRange();
 
                 if (startDate.Value == DateTimePicker.MinimumDateTime)
                     bdr.startDate = new BacnetDate(255, 255, 255);
@@ -520,7 +515,7 @@ namespace Yabe
             }
             if (Entry is BacnetweekNDay)
             {
-                BacnetweekNDay bwd = (BacnetweekNDay)Entry;
+                var bwd = (BacnetweekNDay)Entry;
 
                 if (wday.SelectedIndex == 7)
                     bwd.wday = 255;

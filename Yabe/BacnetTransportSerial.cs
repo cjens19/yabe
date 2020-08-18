@@ -24,10 +24,7 @@
 *
 *********************************************************************/
 
-using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Linq;
 using System.IO.BACnet.Serialize;
 using System.Diagnostics;
 
@@ -59,7 +56,7 @@ namespace System.IO.BACnet
         {
             if (obj == null) return false;
             else if (!(obj is BacnetSerialPortTransport)) return false;
-            BacnetSerialPortTransport a = (BacnetSerialPortTransport)obj;
+            var a = (BacnetSerialPortTransport)obj;
             return m_port_name.Equals(a.m_port_name);
         }
 
@@ -90,7 +87,7 @@ namespace System.IO.BACnet
             m_port.ReadTimeout = timeout_ms;
             try
             {
-                int rx = m_port.Read(buffer, offset, length);
+                var rx = m_port.Read(buffer, offset, length);
                 return rx;
             }
             catch (TimeoutException)
@@ -165,7 +162,7 @@ namespace System.IO.BACnet
         {
             if (obj == null) return false;
             else if (!(obj is BacnetPipeTransport)) return false;
-            BacnetPipeTransport a = (BacnetPipeTransport)obj;
+            var a = (BacnetPipeTransport)obj;
             return m_name.Equals(a.m_name);
         }
 
@@ -219,7 +216,7 @@ namespace System.IO.BACnet
             if (m_conn.IsConnected) return true;
             if (m_conn is System.IO.Pipes.NamedPipeServerStream)
             {
-                System.IO.Pipes.NamedPipeServerStream server = (System.IO.Pipes.NamedPipeServerStream)m_conn;
+                var server = (System.IO.Pipes.NamedPipeServerStream)m_conn;
                 if (m_current_connect == null)
                 {
                     try
@@ -272,7 +269,7 @@ namespace System.IO.BACnet
             {
                 try
                 {
-                    int rx = m_conn.EndRead(m_current_read);
+                    var rx = m_conn.EndRead(m_current_read);
                     m_current_read = null;
                     return rx;
                 }
@@ -307,11 +304,11 @@ namespace System.IO.BACnet
             {
                 try
                 {
-                    String[] listOfPipes = System.IO.Directory.GetFiles(@"\\.\pipe\");
+                    var listOfPipes = System.IO.Directory.GetFiles(@"\\.\pipe\");
                     if (listOfPipes == null) return new string[0];
                     else
                     {
-                        for (int i = 0; i < listOfPipes.Length; i++)
+                        for (var i = 0; i < listOfPipes.Length; i++)
                             listOfPipes[i] = listOfPipes[i].Replace(@"\\.\pipe\", "");
                         return listOfPipes;
                     }
@@ -364,9 +361,9 @@ namespace System.IO.BACnet
         {
             get
             {
-                List<string> ret = new List<string>();
+                var ret = new List<string>();
                 WIN32_FIND_DATA data;
-                IntPtr handle = FindFirstFile(@"\\.\pipe\*", out data);
+                var handle = FindFirstFile(@"\\.\pipe\*", out data);
                 if (handle != new IntPtr(-1))
                 {
                     do
@@ -424,7 +421,7 @@ namespace System.IO.BACnet
         public override bool Equals(object obj)
         {
             if (!(obj is BacnetPtpProtocolTransport)) return false;
-            BacnetPtpProtocolTransport a = (BacnetPtpProtocolTransport)obj;
+            var a = (BacnetPtpProtocolTransport)obj;
             return m_port.Equals(a.m_port);
         }
 
@@ -492,7 +489,7 @@ namespace System.IO.BACnet
         {
             byte[] greeting = { PTP.PTP_GREETING_PREAMBLE1, PTP.PTP_GREETING_PREAMBLE2, 0x43, 0x6E, 0x65, 0x74, 0x0D };        //BACnet\n
             max_offset = Math.Min(offset + greeting.Length, max_offset);
-            for (int i = offset; i < max_offset; i++)
+            for (var i = offset; i < max_offset; i++)
                 if (buffer[i] != greeting[i - offset])
                     return false;
             return true;
@@ -528,14 +525,14 @@ namespace System.IO.BACnet
         private bool WaitForGreeting(int timeout)
         {
             if (m_port == null) return false;
-            byte[] buffer = new byte[7];
-            int offset = 0;
+            var buffer = new byte[7];
+            var offset = 0;
             int current_timeout;
             while (offset < 7)
             {
                 if (offset == 0) current_timeout = timeout;
                 else current_timeout = T_FRAME_ABORT;
-                int rx = m_port.Read(buffer, offset, 7 - offset, current_timeout);
+                var rx = m_port.Read(buffer, offset, 7 - offset, current_timeout);
                 if (rx <= 0) return false;
                 offset += rx;
 
@@ -595,7 +592,7 @@ namespace System.IO.BACnet
         private void RemoveGarbage(byte[] buffer, ref int length)
         {
             //scan for preambles
-            for (int i = 0; i < (length - 1); i++)
+            for (var i = 0; i < (length - 1); i++)
             {
                 if ((buffer[i] == PTP.PTP_PREAMBLE1 && buffer[i + 1] == PTP.PTP_PREAMBLE2) || IsGreeting(buffer, i, length))
                 {
@@ -633,7 +630,7 @@ namespace System.IO.BACnet
             //X'11' (XON)  => X'10' X'91' 
             //X'13' (XOFF) => X'10' X'93'
 
-            for (int i = offset; i < max_offset; i++)
+            for (var i = offset; i < max_offset; i++)
             {
                 if (compliment_next)
                 {
@@ -653,11 +650,11 @@ namespace System.IO.BACnet
 
         private void SendWithXonXoff(byte[] buffer, int offset, int length)
         {
-            byte[] escape = new byte[1] { 0x10 };
-            int max_offset = length + offset;
+            var escape = new byte[1] { 0x10 };
+            var max_offset = length + offset;
 
             //scan
-            for (int i = offset; i < max_offset; i++)
+            for (var i = offset; i < max_offset; i++)
             {
                 if (buffer[i] == 0x10 || buffer[i] == 0x11 || buffer[i] == 0x13)
                 {
@@ -689,7 +686,7 @@ namespace System.IO.BACnet
 
         private void SendDisconnect(BacnetPtpFrameTypes bacnetPtpFrameTypes, BacnetPtpDisconnectReasons bacnetPtpDisconnectReasons)
         {
-            byte[] buffer = new byte[PTP.PTP_HEADER_LENGTH + 1 + 2];
+            var buffer = new byte[PTP.PTP_HEADER_LENGTH + 1 + 2];
             buffer[PTP.PTP_HEADER_LENGTH] = (byte)bacnetPtpDisconnectReasons;
             SendFrame(BacnetPtpFrameTypes.FRAME_TYPE_DISCONNECT_REQUEST, buffer, 1);
         }
@@ -699,7 +696,7 @@ namespace System.IO.BACnet
             if (rx == -BacnetMstpProtocolTransport.ETIMEDOUT)
             {
                 //drop message
-                BacnetMstpProtocolTransport.GetMessageStatus status = offset == 0 ? BacnetMstpProtocolTransport.GetMessageStatus.Timeout : BacnetMstpProtocolTransport.GetMessageStatus.SubTimeout;
+                var status = offset == 0 ? BacnetMstpProtocolTransport.GetMessageStatus.Timeout : BacnetMstpProtocolTransport.GetMessageStatus.SubTimeout;
                 buffer[0] = 0xFF;
                 RemoveGarbage(buffer, ref offset);
                 return status;
@@ -724,11 +721,11 @@ namespace System.IO.BACnet
         private BacnetMstpProtocolTransport.GetMessageStatus GetNextMessage(byte[] buffer, ref int offset, int timeout_ms, out BacnetPtpFrameTypes frame_type, out int msg_length)
         {
             BacnetMstpProtocolTransport.GetMessageStatus status;
-            int timeout = timeout_ms;
+            var timeout = timeout_ms;
 
             frame_type = BacnetPtpFrameTypes.FRAME_TYPE_HEARTBEAT_XOFF;
             msg_length = 0;
-            bool compliment_next = false;
+            var compliment_next = false;
 
             //fetch header
             while (offset < PTP.PTP_HEADER_LENGTH)
@@ -746,7 +743,7 @@ namespace System.IO.BACnet
                 if (status != BacnetMstpProtocolTransport.GetMessageStatus.Good) return status;
 
                 //remove XON/XOFF
-                int new_offset = offset + rx;
+                var new_offset = offset + rx;
                 RemoveXonOff(buffer, offset, ref new_offset, ref compliment_next);
                 offset = new_offset;
 
@@ -758,7 +755,7 @@ namespace System.IO.BACnet
             if (IsGreeting(buffer, 0, offset))
             {
                 //get last byte
-                int rx = m_port.Read(buffer, offset, 1, timeout);
+                var rx = m_port.Read(buffer, offset, 1, timeout);
                 status = ProcessRxStatus(buffer, ref offset, rx);
                 if (status != BacnetMstpProtocolTransport.GetMessageStatus.Good) return status;
                 offset += 1;
@@ -803,12 +800,12 @@ namespace System.IO.BACnet
                 while (offset < full_msg_length)
                 {
                     //read 
-                    int rx = m_port.Read(buffer, offset, full_msg_length - offset, timeout);
+                    var rx = m_port.Read(buffer, offset, full_msg_length - offset, timeout);
                     status = ProcessRxStatus(buffer, ref offset, rx);
                     if (status != BacnetMstpProtocolTransport.GetMessageStatus.Good) return status;
 
                     //remove XON/XOFF
-                    int new_offset = offset + rx;
+                    var new_offset = offset + rx;
                     RemoveXonOff(buffer, offset, ref new_offset, ref compliment_next);
                     offset = new_offset;
                 }
@@ -833,7 +830,7 @@ namespace System.IO.BACnet
 
         private void ptp_thread()
         {
-            byte[] buffer = new byte[MaxBufferLength];
+            var buffer = new byte[MaxBufferLength];
             try
             {
                 while (m_port != null)
@@ -849,10 +846,10 @@ namespace System.IO.BACnet
                     }
 
                     //read message
-                    int offset = 0;
+                    var offset = 0;
                     BacnetPtpFrameTypes frame_type;
                     int msg_length;
-                    BacnetMstpProtocolTransport.GetMessageStatus status = GetNextMessage(buffer, ref offset, T_HEARTBEAT, out frame_type, out msg_length);
+                    var status = GetNextMessage(buffer, ref offset, T_HEARTBEAT, out frame_type, out msg_length);
 
                     //action
                     switch (status)
@@ -926,8 +923,8 @@ namespace System.IO.BACnet
                                     //also send a password perhaps?
                                     if (!string.IsNullOrEmpty(m_password))
                                     {
-                                        byte[] pass = System.Text.ASCIIEncoding.ASCII.GetBytes(m_password);
-                                        byte[] tmp_buffer = new byte[PTP.PTP_HEADER_LENGTH + pass.Length + 2];
+                                        var pass = System.Text.ASCIIEncoding.ASCII.GetBytes(m_password);
+                                        var tmp_buffer = new byte[PTP.PTP_HEADER_LENGTH + pass.Length + 2];
                                         Array.Copy(pass, 0, tmp_buffer, PTP.PTP_HEADER_LENGTH, pass.Length);
                                         SendFrame(BacnetPtpFrameTypes.FRAME_TYPE_CONNECT_RESPONSE, tmp_buffer, pass.Length);
                                     }
@@ -1058,7 +1055,7 @@ namespace System.IO.BACnet
             if (m_port == null) return;
             m_port.Open();
 
-            Threading.Thread th = new Threading.Thread(mstp_thread_sniffer);
+            var th = new Threading.Thread(mstp_thread_sniffer);
             th.IsBackground = true;
             th.Start();
 
@@ -1077,7 +1074,7 @@ namespace System.IO.BACnet
 
                 try
                 {
-                    GetMessageStatus status = GetNextMessage(T_NO_TOKEN, out  frame_type, out  destination_address, out  source_address, out  msg_length);
+                    var status = GetNextMessage(T_NO_TOKEN, out  frame_type, out  destination_address, out  source_address, out  msg_length);
 
                     if (status == GetMessageStatus.ConnectionClose)
                     {
@@ -1095,7 +1092,7 @@ namespace System.IO.BACnet
                             // Array copy
                             // after that it could be put asynchronously another time in the Main message loop
                             // without any problem
-                            byte[] packet = new byte[length];
+                            var packet = new byte[length];
                             Array.Copy(m_local_buffer, 0, packet, 0, length);
 
                             // No need to use the thread pool, if the pipe is too slow
@@ -1134,7 +1131,7 @@ namespace System.IO.BACnet
         {
             if (obj == null) return false;
             else if (!(obj is BacnetMstpProtocolTransport)) return false;
-            BacnetMstpProtocolTransport a = (BacnetMstpProtocolTransport)obj;
+            var a = (BacnetMstpProtocolTransport)obj;
             return m_port.Equals(a.m_port);
         }
 
@@ -1194,7 +1191,7 @@ namespace System.IO.BACnet
             int tx;
             if (frame.data == null || frame.data.Length == 0)
             {
-                byte[] tmp_transmit_buffer = new byte[MSTP.MSTP_HEADER_LENGTH];
+                var tmp_transmit_buffer = new byte[MSTP.MSTP_HEADER_LENGTH];
                 tx = MSTP.Encode(tmp_transmit_buffer, 0, frame.frame_type, frame.destination_address, (byte)m_TS, 0);
                 m_port.Write(tmp_transmit_buffer, 0, tx);
             }
@@ -1276,7 +1273,7 @@ namespace System.IO.BACnet
                 SendFrame(BacnetMstpFrameTypes.FRAME_TYPE_POLL_FOR_MASTER, m_PS);
 
                 //wait
-                GetMessageStatus status = GetNextMessage(T_USAGE_TIMEOUT, out frame_type, out destination_address, out source_address, out msg_length);
+                var status = GetNextMessage(T_USAGE_TIMEOUT, out frame_type, out destination_address, out source_address, out msg_length);
 
                 if (status == GetMessageStatus.Good)
                 {
@@ -1396,7 +1393,7 @@ namespace System.IO.BACnet
             int msg_length;
 
             //fetch message
-            GetMessageStatus status = GetNextMessage(T_REPLY_TIMEOUT, out frame_type, out destination_address, out source_address, out msg_length);
+            var status = GetNextMessage(T_REPLY_TIMEOUT, out frame_type, out destination_address, out source_address, out msg_length);
 
             if (status == GetMessageStatus.Good)
             {
@@ -1407,7 +1404,7 @@ namespace System.IO.BACnet
                         //signal upper layer
                         if (MessageRecieved != null && frame_type != BacnetMstpFrameTypes.FRAME_TYPE_TEST_RESPONSE)
                         {
-                            BacnetAddress remote_address = new BacnetAddress(BacnetAddressTypes.MSTP, 0, new byte[] { source_address });
+                            var remote_address = new BacnetAddress(BacnetAddressTypes.MSTP, 0, new byte[] { source_address });
                             try
                             {
                                 MessageRecieved(this, m_local_buffer, MSTP.MSTP_HEADER_LENGTH, msg_length, remote_address);
@@ -1483,13 +1480,13 @@ namespace System.IO.BACnet
             byte source_address;
             int msg_length;
 
-            for (int i = 0; i <= m_retry_token; i++)
+            for (var i = 0; i <= m_retry_token; i++)
             {
                 //send 
                 SendFrame(BacnetMstpFrameTypes.FRAME_TYPE_TOKEN, m_NS);
 
                 //wait for it to be used
-                GetMessageStatus status = GetNextMessage(T_USAGE_TIMEOUT, out frame_type, out destination_address, out source_address, out msg_length);
+                var status = GetNextMessage(T_USAGE_TIMEOUT, out frame_type, out destination_address, out source_address, out msg_length);
                 if (status == GetMessageStatus.Good || status == GetMessageStatus.DecodeError)
                     return StateChanges.SawTokenUser;   //don't remove current message
             }
@@ -1503,7 +1500,7 @@ namespace System.IO.BACnet
 
         private StateChanges Idle()
         {
-            int no_token_timeout = T_NO_TOKEN + 10 * m_TS;
+            var no_token_timeout = T_NO_TOKEN + 10 * m_TS;
             BacnetMstpFrameTypes frame_type;
             byte destination_address;
             byte source_address;
@@ -1512,7 +1509,7 @@ namespace System.IO.BACnet
             while (m_port != null)
             {
                 //get message
-                GetMessageStatus status = GetNextMessage(no_token_timeout, out frame_type, out destination_address, out source_address, out msg_length);
+                var status = GetNextMessage(no_token_timeout, out frame_type, out destination_address, out source_address, out msg_length);
 
                 if (status == GetMessageStatus.Good)
                 {
@@ -1553,7 +1550,7 @@ namespace System.IO.BACnet
                                     //signal upper layer
                                     if (MessageRecieved != null)
                                     {
-                                        BacnetAddress remote_address = new BacnetAddress(BacnetAddressTypes.MSTP, 0, new byte[] { source_address });
+                                        var remote_address = new BacnetAddress(BacnetAddressTypes.MSTP, 0, new byte[] { source_address });
                                         try
                                         {
                                             MessageRecieved(this, m_local_buffer, MSTP.MSTP_HEADER_LENGTH, msg_length, remote_address);
@@ -1634,7 +1631,7 @@ namespace System.IO.BACnet
         {
             try
             {
-                StateChanges state_change = StateChanges.Reset;
+                var state_change = StateChanges.Reset;
 
                 while (m_port != null)
                 {
@@ -1699,7 +1696,7 @@ namespace System.IO.BACnet
         private void RemoveGarbage()
         {
             //scan for preambles
-            for (int i = 0; i < (m_local_offset - 1); i++)
+            for (var i = 0; i < (m_local_offset - 1); i++)
             {
                 if (m_local_buffer[i] == MSTP.MSTP_PREAMBLE1 && m_local_buffer[i + 1] == MSTP.MSTP_PREAMBLE2)
                 {
@@ -1768,7 +1765,7 @@ namespace System.IO.BACnet
                 if (rx == -ETIMEDOUT)
                 {
                     //drop message
-                    GetMessageStatus status = m_local_offset == 0 ? GetMessageStatus.Timeout : GetMessageStatus.SubTimeout;
+                    var status = m_local_offset == 0 ? GetMessageStatus.Timeout : GetMessageStatus.SubTimeout;
                     m_local_buffer[0] = 0xFF;
                     RemoveGarbage();
                     return status;
@@ -1819,11 +1816,11 @@ namespace System.IO.BACnet
                 while (m_local_offset < full_msg_length)
                 {
                     //read 
-                    int rx = m_port.Read(m_local_buffer, m_local_offset, full_msg_length - m_local_offset, timeout);
+                    var rx = m_port.Read(m_local_buffer, m_local_offset, full_msg_length - m_local_offset, timeout);
                     if (rx == -ETIMEDOUT)
                     {
                         //drop message
-                        GetMessageStatus status = m_local_offset == 0 ? GetMessageStatus.Timeout : GetMessageStatus.SubTimeout;
+                        var status = m_local_offset == 0 ? GetMessageStatus.Timeout : GetMessageStatus.SubTimeout;
                         m_local_buffer[0] = 0xFF;
                         RemoveGarbage();
                         return status;
@@ -1858,10 +1855,10 @@ namespace System.IO.BACnet
             //signal frame event
             if (FrameRecieved != null)
             {
-                BacnetMstpFrameTypes _frame_type = frame_type;
-                byte _destination_address = destination_address;
-                byte _source_address = source_address;
-                int _msg_length = msg_length;
+                var _frame_type = frame_type;
+                var _destination_address = destination_address;
+                var _source_address = source_address;
+                var _msg_length = msg_length;
                 System.Threading.ThreadPool.QueueUserWorkItem((o) => { FrameRecieved(this, _frame_type, _destination_address, _source_address, _msg_length); }, null);
             }
 
@@ -1878,9 +1875,9 @@ namespace System.IO.BACnet
             //add to queue
             BacnetNpduControls function = NPDU.DecodeFunction(buffer, offset);
             BacnetMstpFrameTypes frame_type = (function & BacnetNpduControls.ExpectingReply) == BacnetNpduControls.ExpectingReply ? BacnetMstpFrameTypes.FRAME_TYPE_BACNET_DATA_EXPECTING_REPLY : BacnetMstpFrameTypes.FRAME_TYPE_BACNET_DATA_NOT_EXPECTING_REPLY;
-            byte[] copy = new byte[data_length + MSTP.MSTP_HEADER_LENGTH + 2];
+            var copy = new byte[data_length + MSTP.MSTP_HEADER_LENGTH + 2];
             Array.Copy(buffer, offset, copy, MSTP.MSTP_HEADER_LENGTH, data_length);
-            MessageFrame f = new MessageFrame(frame_type, address.adr[0], copy, data_length);
+            var f = new MessageFrame(frame_type, address.adr[0], copy, data_length);
             lock (m_send_queue)
                 m_send_queue.AddLast(f);
             if (m_reply == null)

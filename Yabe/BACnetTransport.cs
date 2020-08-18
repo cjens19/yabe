@@ -24,11 +24,8 @@
 *
 *********************************************************************/
 
-using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Linq;
-using System.IO.BACnet.Serialize;
 using System.Diagnostics;
 using System.Net;
 using System.Text.RegularExpressions;
@@ -94,7 +91,7 @@ namespace System.IO.BACnet
         public override bool Equals(object obj)
         {
             if (!(obj is BacnetIpUdpProtocolTransport)) return false;
-            BacnetIpUdpProtocolTransport a = (BacnetIpUdpProtocolTransport)obj;
+            var a = (BacnetIpUdpProtocolTransport)obj;
             return a.m_port == m_port;
         }
 
@@ -181,12 +178,12 @@ namespace System.IO.BACnet
 
         private void OnReceiveData(IAsyncResult asyncResult)
         {
-            System.Net.Sockets.UdpClient conn = (System.Net.Sockets.UdpClient)asyncResult.AsyncState;
+            var conn = (System.Net.Sockets.UdpClient)asyncResult.AsyncState;
             try
             {
-                System.Net.IPEndPoint ep = new Net.IPEndPoint(System.Net.IPAddress.Any, 0);
+                var ep = new Net.IPEndPoint(System.Net.IPAddress.Any, 0);
                 byte[] local_buffer;
-                int rx = 0;
+                var rx = 0;
 
                 try
                 {
@@ -221,7 +218,7 @@ namespace System.IO.BACnet
                     else
                     {
                         // Basic Header lenght
-                        int HEADER_LENGTH = bvlc.Decode(local_buffer, 0, out function, out msg_length, ep);
+                        var HEADER_LENGTH = bvlc.Decode(local_buffer, 0, out function, out msg_length, ep);
 
                         if (HEADER_LENGTH == -1)
                         {
@@ -239,8 +236,8 @@ namespace System.IO.BACnet
                         // we don't care about the BBMD address
                         if (function == BacnetBvlcFunctions.BVLC_FORWARDED_NPDU)
                         {
-                            long ip = ((long)local_buffer[7] << 24) + ((long)local_buffer[6] << 16) + ((long)local_buffer[5] << 8) + (long)local_buffer[4];
-                            int port = (local_buffer[8] << 8) + local_buffer[9];    // 0xbac0 maybe
+                            var ip = ((long)local_buffer[7] << 24) + ((long)local_buffer[6] << 16) + ((long)local_buffer[5] << 8) + (long)local_buffer[4];
+                            var port = (local_buffer[8] << 8) + local_buffer[9];    // 0xbac0 maybe
                             ep = new Net.IPEndPoint(ip, port);
 
                             Convert((System.Net.IPEndPoint)ep, out remote_address);
@@ -300,9 +297,9 @@ namespace System.IO.BACnet
 
         public static string ConvertToHex(byte[] buffer, int length)
         {
-            string ret = "";
+            var ret = "";
 
-            for (int i = 0; i < length; i++)
+            for (var i = 0; i < length; i++)
                 ret += buffer[i].ToString("X2");
 
             return ret;
@@ -322,7 +319,7 @@ namespace System.IO.BACnet
             if (m_exclusive_conn == null) return 0;
 
             //add header
-            int full_length = data_length + HeaderLength;
+            var full_length = data_length + HeaderLength;
             bvlc.Encode(buffer, offset - BVLC.BVLC_HEADER_LENGTH, address.net == 0xFFFF ? BacnetBvlcFunctions.BVLC_ORIGINAL_BROADCAST_NPDU : BacnetBvlcFunctions.BVLC_ORIGINAL_UNICAST_NPDU, full_length);
 
             //create end point
@@ -342,8 +339,8 @@ namespace System.IO.BACnet
 
         public static void Convert(System.Net.IPEndPoint ep, out BacnetAddress addr)
         {
-            byte[] tmp1 = ep.Address.GetAddressBytes();
-            byte[] tmp2 = BitConverter.GetBytes((ushort)ep.Port);
+            var tmp1 = ep.Address.GetAddressBytes();
+            var tmp2 = BitConverter.GetBytes((ushort)ep.Port);
             Array.Reverse(tmp2);
             Array.Resize<byte>(ref tmp1, tmp1.Length + tmp2.Length);
             Array.Copy(tmp2, 0, tmp1, tmp1.Length - tmp2.Length, tmp2.Length);
@@ -353,7 +350,7 @@ namespace System.IO.BACnet
         public static void Convert(BacnetAddress addr, out System.Net.IPEndPoint ep)
         {
             long ip_address = BitConverter.ToUInt32(addr.adr, 0);
-            ushort port = (ushort)((addr.adr[4] << 8) | (addr.adr[5] << 0));
+            var port = (ushort)((addr.adr[4] << 8) | (addr.adr[5] << 0));
             ep = new System.Net.IPEndPoint(ip_address, (int)port);
         }
 
@@ -364,13 +361,13 @@ namespace System.IO.BACnet
         private Net.NetworkInformation.UnicastIPAddressInformation GettAddress_DefaultInterface()
         {
             Net.NetworkInformation.UnicastIPAddressInformation UniIP = null;
-            int NbAdd = 0;
+            var NbAdd = 0;
 
-            foreach (System.Net.NetworkInformation.NetworkInterface adapter in System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces())
+            foreach (var adapter in System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces())
                 if (adapter.OperationalStatus == System.Net.NetworkInformation.OperationalStatus.Up)
                     if (adapter.NetworkInterfaceType != System.Net.NetworkInformation.NetworkInterfaceType.Loopback)
                         if (!(adapter.Description.Contains("VirtualBox") || adapter.Description.Contains("VMware")))
-                            foreach (System.Net.NetworkInformation.UnicastIPAddressInformation ip in adapter.GetIPProperties().UnicastAddresses)
+                            foreach (var ip in adapter.GetIPProperties().UnicastAddresses)
                             {
                                 if (ip.Address.AddressFamily == Net.Sockets.AddressFamily.InterNetwork)
                                 {
@@ -391,7 +388,7 @@ namespace System.IO.BACnet
         protected virtual BacnetAddress _GetBroadcastAddress()
         {
             // general broadcast by default if nothing better is found
-            System.Net.IPEndPoint ep = new Net.IPEndPoint(System.Net.IPAddress.Parse("255.255.255.255"), m_port);
+            var ep = new Net.IPEndPoint(System.Net.IPAddress.Parse("255.255.255.255"), m_port);
 
             Net.NetworkInformation.UnicastIPAddressInformation ipAddr = null;
 
@@ -400,8 +397,8 @@ namespace System.IO.BACnet
             else
             {
                 // restricted local broadcast (directed ... routable)
-                foreach (System.Net.NetworkInformation.NetworkInterface adapter in System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces())
-                    foreach (System.Net.NetworkInformation.UnicastIPAddressInformation ip in adapter.GetIPProperties().UnicastAddresses)
+                foreach (var adapter in System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces())
+                    foreach (var ip in adapter.GetIPProperties().UnicastAddresses)
                         if (LocalEndPoint.Address.Equals(ip.Address))
                         {
                             ipAddr = ip;
@@ -413,10 +410,10 @@ namespace System.IO.BACnet
             {
                 try
                 {
-                    string[] strCurrentIP = ipAddr.Address.ToString().Split('.');
-                    string[] strIPNetMask = ipAddr.IPv4Mask.ToString().Split('.');
-                    StringBuilder BroadcastStr = new StringBuilder();
-                    for (int i = 0; i < 4; i++)
+                    var strCurrentIP = ipAddr.Address.ToString().Split('.');
+                    var strIPNetMask = ipAddr.IPv4Mask.ToString().Split('.');
+                    var BroadcastStr = new StringBuilder();
+                    for (var i = 0; i < 4; i++)
                     {
                         BroadcastStr.Append(((byte)(int.Parse(strCurrentIP[i]) | ~int.Parse(strIPNetMask[i]))).ToString());
                         if (i != 3) BroadcastStr.Append('.');
@@ -523,13 +520,13 @@ namespace System.IO.BACnet
 
         public string FDList()
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             lock (ForeignDevices)
             {
                 // remove oldest Device entries (Time expiration > TTL + 30s delay)
                 ForeignDevices.Remove(ForeignDevices.Find(item => DateTime.Now > item.Value));
 
-                foreach (KeyValuePair<System.Net.IPEndPoint, DateTime> client in ForeignDevices)
+                foreach (var client in ForeignDevices)
                 {
                     sb.Append(client.Key.Address);
                     sb.Append(":");
@@ -563,7 +560,7 @@ namespace System.IO.BACnet
                 // remove it, if any
                 ForeignDevices.Remove(ForeignDevices.Find(item => item.Key.Equals(sender)));
                 // TTL + 30s grace period
-                DateTime Expiration = DateTime.Now.AddSeconds(TTL + 30);
+                var Expiration = DateTime.Now.AddSeconds(TTL + 30);
                 // add it
                 if (AutorizedFDR.Count == 0) // No rules, accept all
                 {
@@ -571,7 +568,7 @@ namespace System.IO.BACnet
                     return;
                 }
                 else
-                    foreach (Regex r in AutorizedFDR)
+                    foreach (var r in AutorizedFDR)
                     {
                         if (r.Match(sender.Address.ToString()).Success)
                         {
@@ -591,7 +588,7 @@ namespace System.IO.BACnet
                 // remove oldest Device entries (Time expiration > TTL + 30s delay)
                 ForeignDevices.Remove(ForeignDevices.Find(item => DateTime.Now > item.Value));
                 // Send to all others, except the original sender
-                foreach (KeyValuePair<System.Net.IPEndPoint, DateTime> client in ForeignDevices)
+                foreach (var client in ForeignDevices)
                 {
                     if (!(client.Key.Equals(EPsender)))
                         MyBBMDTransport.Send(buffer, msg_length, client.Key);
@@ -601,8 +598,8 @@ namespace System.IO.BACnet
 
         private System.Net.IPEndPoint BBMDSentAdd(Net.IPEndPoint BBMD, Net.IPAddress Mask)
         {
-            byte[] bm = Mask.GetAddressBytes();
-            byte[] bip = BBMD.Address.GetAddressBytes();
+            var bm = Mask.GetAddressBytes();
+            var bip = BBMD.Address.GetAddressBytes();
 
             /* annotation in Steve Karg bacnet stack :
          
@@ -623,7 +620,7 @@ namespace System.IO.BACnet
                     address, but these datagrams are generaly destroy by the final IP router
              */
 
-            for (int i = 0; i < bm.Length; i++)
+            for (var i = 0; i < bm.Length; i++)
                 bip[i] = (byte)(bip[i] | (~bm[i]));
 
             return new System.Net.IPEndPoint(new System.Net.IPAddress(bip), BBMD.Port);
@@ -634,9 +631,9 @@ namespace System.IO.BACnet
         {
             lock (BBMDs)
             {
-                foreach (KeyValuePair<System.Net.IPEndPoint, System.Net.IPAddress> e in BBMDs)
+                foreach (var e in BBMDs)
                 {
-                    System.Net.IPEndPoint endpoint = BBMDSentAdd(e.Key, e.Value);
+                    var endpoint = BBMDSentAdd(e.Key, e.Value);
                     MyBBMDTransport.Send(buffer, msg_length, endpoint);
                 }
             }
@@ -657,14 +654,14 @@ namespace System.IO.BACnet
             // change to   -  10 bytes BVLC  -  NPDU  - APDU
 
             // copy, 6 bytes shifted
-            byte[] b = new byte[msg_length + 6];    // normaly only 'small' frames are present here, so no need to check if it's to big for Udp
+            var b = new byte[msg_length + 6];    // normaly only 'small' frames are present here, so no need to check if it's to big for Udp
             Array.Copy(buffer, 0, b, 6, msg_length);
 
             // 10 bytes for the BVLC Header, with the embedded 6 bytes IP:Port of the original sender
             First4BytesHeaderEncode(b, BacnetBvlcFunctions.BVLC_FORWARDED_NPDU, msg_length + 6);
             BacnetAddress BacSender;
             BacnetIpUdpProtocolTransport.Convert(EPsender, out BacSender); // to embbed in the forward BVLC header
-            for (int i = 0; i < BacSender.adr.Length; i++)
+            for (var i = 0; i < BacSender.adr.Length; i++)
                 b[4 + i] = BacSender.adr[i];
 
             // To BBMD
@@ -679,7 +676,7 @@ namespace System.IO.BACnet
         // Send ack or nack
         private void SendResult(System.Net.IPEndPoint sender, BacnetBvlcResults ResultCode)
         {
-            byte[] b = new byte[6];
+            var b = new byte[6];
             First4BytesHeaderEncode(b, BacnetBvlcFunctions.BVLC_RESULT, 6);
             b[4] = (byte)(((ushort)ResultCode & 0xFF00) >> 8);
             b[5] = (byte)((ushort)ResultCode & 0xFF);
@@ -689,7 +686,7 @@ namespace System.IO.BACnet
 
         public void SendRegisterAsForeignDevice(System.Net.IPEndPoint BBMD, short TTL)
         {
-            byte[] b = new byte[6];
+            var b = new byte[6];
             First4BytesHeaderEncode(b, BacnetBvlcFunctions.BVLC_REGISTER_FOREIGN_DEVICE, 6);
             b[4] = (byte)((TTL & 0xFF00) >> 8);
             b[5] = (byte)(TTL & 0xFF);
@@ -698,24 +695,24 @@ namespace System.IO.BACnet
 
         public void SendReadBroadCastTable(System.Net.IPEndPoint BBMD)
         {
-            byte[] b = new byte[4];
+            var b = new byte[4];
             First4BytesHeaderEncode(b, BacnetBvlcFunctions.BVLC_READ_BROADCAST_DIST_TABLE, 4);
             MyBBMDTransport.Send(b, 4, BBMD);
         }
 
         public void SendReadFDRTable(System.Net.IPEndPoint BBMD)
         {
-            byte[] b = new byte[4];
+            var b = new byte[4];
             First4BytesHeaderEncode(b, BacnetBvlcFunctions.BVLC_READ_FOREIGN_DEVICE_TABLE, 4);
             MyBBMDTransport.Send(b, 4, BBMD);
         }
 
         public void SendWriteBroadCastTable(System.Net.IPEndPoint BBMD, List<Tuple<IPEndPoint, IPAddress>> Entries)
         {
-            byte[] b = new byte[4 + 10 * Entries.Count];
+            var b = new byte[4 + 10 * Entries.Count];
             First4BytesHeaderEncode(b, BacnetBvlcFunctions.BVLC_WRITE_BROADCAST_DISTRIBUTION_TABLE, 4 + 10 * Entries.Count);
 
-            for (int i = 0; i < Entries.Count; i++)
+            for (var i = 0; i < Entries.Count; i++)
             {
                 Array.Copy(Entries[i].Item1.Address.GetAddressBytes(), 0, b, 4 + i * 10, 4);
                 b[8 + i * 10] = (byte)(Entries[i].Item1.Port >> 8);
@@ -728,7 +725,7 @@ namespace System.IO.BACnet
 
         public void SendDeleteForeignDeviceEntry(System.Net.IPEndPoint BBMD, IPEndPoint Fdevice)
         {
-            byte[] b = new byte[4 + 6];
+            var b = new byte[4 + 6];
             First4BytesHeaderEncode(b, BacnetBvlcFunctions.BVLC_READ_FOREIGN_DEVICE_TABLE, 4 + 6);
             Array.Copy(Fdevice.Address.GetAddressBytes(), 0, b, 4, 4);
             b[8] = (byte)(Fdevice.Port >> 8);
@@ -753,7 +750,7 @@ namespace System.IO.BACnet
             // optional BBMD service
             if ((BBMD_FD_ServiceActivated == true) && (function == BacnetBvlcFunctions.BVLC_ORIGINAL_BROADCAST_NPDU))
             {
-                Net.IPEndPoint me = MyBBMDTransport.LocalEndPoint;
+                var me = MyBBMDTransport.LocalEndPoint;
                 // just sometime working, enable to get the local ep, always 0.0.0.0 if the socket is open with
                 // System.Net.IPAddress.Any
                 // So in this case don't send a bad message
@@ -777,7 +774,7 @@ namespace System.IO.BACnet
             switch (function)
             {
                 case BacnetBvlcFunctions.BVLC_RESULT:
-                    int ResultCode = (buffer[4] << 8) + buffer[5];
+                    var ResultCode = (buffer[4] << 8) + buffer[5];
                     if (MessageReceived != null)
                         MessageReceived(sender, function, (BacnetBvlcResults)ResultCode, null);
                     return 0;   // not for the upper layers
@@ -830,7 +827,7 @@ namespace System.IO.BACnet
                 case BacnetBvlcFunctions.BVLC_REGISTER_FOREIGN_DEVICE:
                     if ((BBMD_FD_ServiceActivated == true) && (msg_length == 6))
                     {
-                        int TTL = (buffer[4] << 8) + buffer[5]; // unit is second
+                        var TTL = (buffer[4] << 8) + buffer[5]; // unit is second
                         RegisterForeignDevice(sender, TTL);
                         SendResult(sender, BacnetBvlcResults.BVLC_RESULT_SUCCESSFUL_COMPLETION);  // ack
                     }
@@ -850,21 +847,21 @@ namespace System.IO.BACnet
                 case BacnetBvlcFunctions.BVLC_WRITE_BROADCAST_DISTRIBUTION_TABLE:
                 case BacnetBvlcFunctions.BVLC_READ_BROADCAST_DIST_TABLE_ACK:
                     {
-                        int NbEntries = (msg_length - 4) / 10;
-                        List<Tuple<IPEndPoint, IPAddress>> Entries = new List<Tuple<IPEndPoint, IPAddress>>();
+                        var NbEntries = (msg_length - 4) / 10;
+                        var Entries = new List<Tuple<IPEndPoint, IPAddress>>();
 
-                        for (int i = 0; i < NbEntries; i++)
+                        for (var i = 0; i < NbEntries; i++)
                         {
                             long add = BitConverter.ToInt32(buffer, 4 + i * 10);
 
                             Array.Reverse(buffer, 8 + i * 10, 2);
-                            ushort port = BitConverter.ToUInt16(buffer, 8 + i * 10);
+                            var port = BitConverter.ToUInt16(buffer, 8 + i * 10);
 
                             // new IPAddress(long) with 255.255.255.255 (ie -1) not OK
-                            byte[] Mask = new byte[4];
+                            var Mask = new byte[4];
                             Array.Copy(buffer, 10 + i * 10, Mask, 0, 4);
 
-                            Tuple<IPEndPoint, IPAddress> entry = new Tuple<IPEndPoint, IPAddress>(new IPEndPoint(new IPAddress(add), port), new IPAddress(Mask));
+                            var entry = new Tuple<IPEndPoint, IPAddress>(new IPEndPoint(new IPAddress(add), port), new IPAddress(Mask));
                             Entries.Add(entry);
                         }
 
@@ -880,22 +877,22 @@ namespace System.IO.BACnet
 
                 case BacnetBvlcFunctions.BVLC_READ_FOREIGN_DEVICE_TABLE_ACK:
                     {
-                        int NbEntries = (msg_length - 4) / 10;
-                        List<Tuple<IPEndPoint, ushort, ushort>> Entries = new List<Tuple<IPEndPoint, ushort, ushort>>();
+                        var NbEntries = (msg_length - 4) / 10;
+                        var Entries = new List<Tuple<IPEndPoint, ushort, ushort>>();
 
-                        for (int i = 0; i < NbEntries; i++)
+                        for (var i = 0; i < NbEntries; i++)
                         {
                             long add = BitConverter.ToInt32(buffer, 4 + i * 10);
 
                             Array.Reverse(buffer, 8 + i * 10, 2);
-                            ushort port = BitConverter.ToUInt16(buffer, 8 + i * 10);
+                            var port = BitConverter.ToUInt16(buffer, 8 + i * 10);
 
                             Array.Reverse(buffer, 10 + i * 10, 2);
-                            ushort TTL = BitConverter.ToUInt16(buffer, 10 + i * 10);
+                            var TTL = BitConverter.ToUInt16(buffer, 10 + i * 10);
                             Array.Reverse(buffer, 12 + i * 10, 2);
-                            ushort RemainTTL = BitConverter.ToUInt16(buffer, 12 + i * 10);
+                            var RemainTTL = BitConverter.ToUInt16(buffer, 12 + i * 10);
 
-                            Tuple<IPEndPoint, ushort, ushort> entry = new Tuple<IPEndPoint, ushort, ushort>(new IPEndPoint(new IPAddress(add), port), TTL, RemainTTL);
+                            var entry = new Tuple<IPEndPoint, ushort, ushort>(new IPEndPoint(new IPAddress(add), port), TTL, RemainTTL);
                             Entries.Add(entry);
                         }
 

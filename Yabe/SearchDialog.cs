@@ -26,14 +26,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Text;
 using System.Linq;
 using System.Windows.Forms;
 using System.IO.BACnet;
-using SharpPcap.LibPcap;
 
 namespace Yabe
 {
@@ -50,7 +45,7 @@ namespace Yabe
             InitializeComponent();
 
             //find all serial ports
-            string[] ports = System.IO.Ports.SerialPort.GetPortNames();
+            var ports = System.IO.Ports.SerialPort.GetPortNames();
             m_SerialPortCombo.Items.AddRange(ports);
             m_SerialPtpPortCombo.Items.AddRange(ports);
 
@@ -58,7 +53,7 @@ namespace Yabe
             {
                 //find all pipe transports that's pretending to be com ports  : fail on Linux
                 ports = BacnetPipeTransport.AvailablePorts;
-                foreach (string str in ports)
+                foreach (var str in ports)
                     if (str.StartsWith("com", StringComparison.InvariantCultureIgnoreCase))
                     {
                         m_SerialPortCombo.Items.Add(str);
@@ -73,7 +68,7 @@ namespace Yabe
 
         private void m_SearchIpButton_Click(object sender, EventArgs e)
         {
-            String adr = Properties.Settings.Default.DefaultUdpIp;
+            var adr = Properties.Settings.Default.DefaultUdpIp;
             if (adr.Contains(':'))
                 m_result = new BacnetClient(new BacnetIpV6UdpProtocolTransport((int)m_PortValue.Value, Properties.Settings.Default.YabeDeviceId, Properties.Settings.Default.Udp_ExclusiveUseOfSocket, Properties.Settings.Default.Udp_DontFragment, Properties.Settings.Default.Udp_MaxPayload, adr), (int)m_TimeoutValue.Value, (int)m_RetriesValue.Value);
             else
@@ -87,7 +82,7 @@ namespace Yabe
         {
             try
             {
-                string s=ethernet_interfaces.Find(o => o.Item1 == m_EthernetInterfaceCombo.Text).Item3;
+                var s=ethernet_interfaces.Find(o => o.Item1 == m_EthernetInterfaceCombo.Text).Item3;
 
                 m_result = new BacnetClient(new BacnetEthernetProtocolTransport(s), (int)m_TimeoutValue.Value, (int)m_RetriesValue.Value);
                 this.DialogResult = System.Windows.Forms.DialogResult.OK;
@@ -101,7 +96,7 @@ namespace Yabe
         {
             try
             {
-                int com_number = 0;
+                var com_number = 0;
                 if (m_SerialPortCombo.Text.Length >= 3) int.TryParse(m_SerialPortCombo.Text.Substring(3), out com_number);
                 BacnetMstpProtocolTransport transport;
                 if (com_number >= 1000)      //these are my special "pipe" com ports 
@@ -120,7 +115,7 @@ namespace Yabe
         {
             try
             {
-                int com_number = 0;
+                var com_number = 0;
                 if (m_SerialPtpPortCombo.Text.Length >= 3) int.TryParse(m_SerialPtpPortCombo.Text.Substring(3), out com_number);
                 BacnetPtpProtocolTransport transport;
                 if (com_number >= 1000)      //these are my special "pipe" com ports 
@@ -140,8 +135,8 @@ namespace Yabe
         {
             ethernet_interfaces = new List<Tuple<String, String, String>>();
 
-            System.Net.NetworkInformation.NetworkInterface[] interfaces = System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces();
-            foreach (System.Net.NetworkInformation.NetworkInterface inf in interfaces)
+            var interfaces = System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces();
+            foreach (var inf in interfaces)
             {
                 if (!inf.IsReceiveOnly && inf.OperationalStatus == System.Net.NetworkInformation.OperationalStatus.Up && inf.SupportsMulticast && inf.NetworkInterfaceType != System.Net.NetworkInformation.NetworkInterfaceType.Loopback)
                 {
@@ -157,7 +152,7 @@ namespace Yabe
         private void SearchDialog_Load(object sender, EventArgs e)
         {
             //get all local endpoints for udp
-            string[] local_endpoints = GetAvailableIps();
+            var local_endpoints = GetAvailableIps();
             m_localUdpEndpointsCombo.Items.Clear();
             m_localUdpEndpointsCombo.Items.AddRange(local_endpoints);
 
@@ -171,17 +166,17 @@ namespace Yabe
 
         public static string[] GetAvailableIps()
         {
-            List<string> ips = new List<string>();
-            System.Net.NetworkInformation.NetworkInterface[] interfaces = System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces();
-            foreach (System.Net.NetworkInformation.NetworkInterface inf in interfaces)
+            var ips = new List<string>();
+            var interfaces = System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces();
+            foreach (var inf in interfaces)
             {
                 if (!inf.IsReceiveOnly && inf.OperationalStatus == System.Net.NetworkInformation.OperationalStatus.Up && inf.SupportsMulticast && inf.NetworkInterfaceType != System.Net.NetworkInformation.NetworkInterfaceType.Loopback)
                 {
                     if (!(inf.Description.Contains("VirtualBox") || inf.Description.Contains("VMware"))) // remove interfaces with virtual machines
                     {
 
-                        System.Net.NetworkInformation.IPInterfaceProperties ipinfo = inf.GetIPProperties();
-                        foreach (System.Net.NetworkInformation.UnicastIPAddressInformation addr in ipinfo.UnicastAddresses)
+                        var ipinfo = inf.GetIPProperties();
+                        foreach (var addr in ipinfo.UnicastAddresses)
                         {
                             if ((addr.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork) ||
                                 ((addr.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6) && Properties.Settings.Default.IPv6_Support))

@@ -25,11 +25,6 @@
 *********************************************************************/
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using System.Net;
 using System.IO.BACnet;
@@ -47,7 +42,7 @@ namespace Yabe
         {
             InitializeComponent();
 
-            DataGridViewCellStyle dgv = new DataGridViewCellStyle();
+            var dgv = new DataGridViewCellStyle();
             dgv.Alignment = DataGridViewContentAlignment.MiddleCenter;
 
             BBMDTable.ColumnHeadersDefaultCellStyle = FDRTable.ColumnHeadersDefaultCellStyle = dgv;
@@ -70,9 +65,9 @@ namespace Yabe
 
             if (function == BacnetBvlcFunctions.BVLC_READ_BROADCAST_DIST_TABLE_ACK) // an table (could be empty)
             {
-                List<Tuple<IPEndPoint, IPAddress>> Entries = (List<Tuple<IPEndPoint, IPAddress>>)data;
+                var Entries = (List<Tuple<IPEndPoint, IPAddress>>)data;
                 BBMDTable.Rows.Clear();
-                foreach (Tuple<IPEndPoint, IPAddress> tpl in Entries)
+                foreach (var tpl in Entries)
                 {
                     BBMDTable.Rows.Add(new object[] { tpl.Item1.Address.ToString(), tpl.Item1.Port, tpl.Item2.ToString() });
                 }
@@ -81,9 +76,9 @@ namespace Yabe
 
             if (function == BacnetBvlcFunctions.BVLC_READ_FOREIGN_DEVICE_TABLE_ACK)
             {
-                List<Tuple<IPEndPoint, ushort, ushort>> Entries = (List<Tuple<IPEndPoint, ushort, ushort>>)data;
+                var Entries = (List<Tuple<IPEndPoint, ushort, ushort>>)data;
                 FDRTable.Rows.Clear();
-                foreach (Tuple<IPEndPoint, ushort, ushort> tpl in Entries)
+                foreach (var tpl in Entries)
                 {
                     FDRTable.Rows.Add(new object[] { tpl.Item1.ToString(), tpl.Item2.ToString(), tpl.Item3.ToString() });
                 }
@@ -123,8 +118,8 @@ namespace Yabe
         private void bpWrite_Click(object sender, EventArgs e)
         {
 
-            List<Tuple<IPEndPoint, IPAddress>> Entries = new List<Tuple<IPEndPoint, IPAddress>>();
-            int idx = 0;
+            var Entries = new List<Tuple<IPEndPoint, IPAddress>>();
+            var idx = 0;
 
             try
             {
@@ -133,9 +128,9 @@ namespace Yabe
                     idx = dtr.Index;
                     if (!dtr.IsNewRow)
                     {
-                        IPEndPoint ep = new IPEndPoint(System.Net.IPAddress.Parse(dtr.Cells["IPAddress"].Value.ToString()), Convert.ToInt32(dtr.Cells["Port"].Value.ToString()));
-                        System.Net.IPAddress mask = System.Net.IPAddress.Parse(dtr.Cells["Mask"].Value.ToString());
-                        Tuple<IPEndPoint, IPAddress> entry = new Tuple<IPEndPoint, IPAddress>(ep, mask);
+                        var ep = new IPEndPoint(System.Net.IPAddress.Parse(dtr.Cells["IPAddress"].Value.ToString()), Convert.ToInt32(dtr.Cells["Port"].Value.ToString()));
+                        var mask = System.Net.IPAddress.Parse(dtr.Cells["Mask"].Value.ToString());
+                        var entry = new Tuple<IPEndPoint, IPAddress>(ep, mask);
                         Entries.Add(entry);
                     }
 

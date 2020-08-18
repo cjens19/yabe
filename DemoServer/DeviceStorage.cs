@@ -24,12 +24,8 @@
 *
 *********************************************************************/
 
-using System;
 using System.Collections.Generic;
-using System.Text;
-using System.IO.BACnet;
 using System.Reflection;
-using System.Linq;
 
 namespace System.IO.BACnet.Storage
 {
@@ -60,7 +56,7 @@ namespace System.IO.BACnet.Storage
         public Property FindProperty(BacnetObjectId object_id, BacnetPropertyIds property_id)
         {
             //liniear search
-            Object obj = FindObject(object_id);
+            var obj = FindObject(object_id);
             return FindProperty(obj, property_id);
         }
 
@@ -69,7 +65,7 @@ namespace System.IO.BACnet.Storage
             //liniear search
             if (obj != null)
             {
-                foreach (Property p in obj.Properties)
+                foreach (var p in obj.Properties)
                 {
                     if (p.Id == property_id)
                         return p;
@@ -81,7 +77,7 @@ namespace System.IO.BACnet.Storage
         private Object FindObject(BacnetObjectTypes object_type)
         {
             //liniear search
-            foreach (Object obj in Objects)
+            foreach (var obj in Objects)
             {
                 if (obj.Type == object_type)
                 {
@@ -94,7 +90,7 @@ namespace System.IO.BACnet.Storage
         public Object FindObject(BacnetObjectId object_id)
         {
             //liniear search
-            foreach (Object obj in Objects)
+            foreach (var obj in Objects)
             {
                 if (obj.Type == object_id.type && obj.Instance == object_id.instance)
                 {
@@ -147,11 +143,11 @@ namespace System.IO.BACnet.Storage
             }
 
             //By thamersalek : find Object in storage            
-            Object Obj1 = FindObject(object_id);
+            var Obj1 = FindObject(object_id);
             if (Obj1 == null)
                 return ErrorCodes.UnKnownObject;
             //Object found now find property
-            Property p = FindProperty(object_id, property_id);
+            var p = FindProperty(object_id, property_id);
             if (p == null) return ErrorCodes.NotExist;
 
             //get value ... check for array index
@@ -173,16 +169,16 @@ namespace System.IO.BACnet.Storage
 
         public void ReadPropertyMultiple(BacnetObjectId object_id, ICollection<BacnetPropertyReference> properties, out IList<BacnetPropertyValue> values)
         {
-            BacnetPropertyValue[] values_ret = new BacnetPropertyValue[properties.Count];
+            var values_ret = new BacnetPropertyValue[properties.Count];
 
-            int count = 0;
-            foreach (BacnetPropertyReference entry in properties)
+            var count = 0;
+            foreach (var entry in properties)
             {
                 
-                BacnetPropertyValue new_entry = new BacnetPropertyValue();
+                var new_entry = new BacnetPropertyValue();
                 new_entry.property = entry;
 
-                ErrorCodes error = ReadProperty(object_id, (BacnetPropertyIds)entry.propertyIdentifier, entry.propertyArrayIndex, out new_entry.value);
+                var error = ReadProperty(object_id, (BacnetPropertyIds)entry.propertyIdentifier, entry.propertyArrayIndex, out new_entry.value);
                 if (error == ErrorCodes.UnKnownObject)
                     new_entry.value = new BacnetValue[] { new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_ERROR, new BacnetError(BacnetErrorClasses.ERROR_CLASS_OBJECT, BacnetErrorCodes.ERROR_CODE_UNKNOWN_OBJECT)) };
                 else if (error == ErrorCodes.NotExist)
@@ -201,15 +197,15 @@ namespace System.IO.BACnet.Storage
             values = null;
 
             //find
-            Object obj = FindObject(object_id);
+            var obj = FindObject(object_id);
             if (obj == null) return false;
 
             //build
-            ErrorCodes[] ret = new ErrorCodes[obj.Properties.Length];
-            BacnetPropertyValue[] _values = new BacnetPropertyValue[obj.Properties.Length];
-            for (int i = 0; i < obj.Properties.Length; i++)
+            var ret = new ErrorCodes[obj.Properties.Length];
+            var _values = new BacnetPropertyValue[obj.Properties.Length];
+            for (var i = 0; i < obj.Properties.Length; i++)
             {
-                BacnetPropertyValue new_entry = new BacnetPropertyValue();
+                var new_entry = new BacnetPropertyValue();
                 new_entry.property = new BacnetPropertyReference((uint)obj.Properties[i].Id, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL);
                 if (ReadProperty(object_id, obj.Properties[i].Id, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL, out new_entry.value) != ErrorCodes.Good)
                     new_entry.value = new BacnetValue[] { new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_ERROR, new BacnetError(BacnetErrorClasses.ERROR_CLASS_OBJECT, BacnetErrorCodes.ERROR_CODE_UNKNOWN_PROPERTY)) };
@@ -231,7 +227,7 @@ namespace System.IO.BACnet.Storage
                 return;
 
             //write
-            BacnetValue[] write_values = new BacnetValue[] { new BacnetValue(read_values[0].Tag, Convert.ChangeType(value, read_values[0].Value.GetType())) };
+            var write_values = new BacnetValue[] { new BacnetValue(read_values[0].Tag, Convert.ChangeType(value, read_values[0].Value.GetType())) };
             WriteProperty(object_id, property_id, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL, write_values);
         }
 
@@ -251,19 +247,19 @@ namespace System.IO.BACnet.Storage
             }
 
             //find
-            Property p = FindProperty(object_id, property_id);
+            var p = FindProperty(object_id, property_id);
             if (p == null)
             {
                 if (!add_if_not_exits) return ErrorCodes.NotExist;
 
                 //add obj
-                Object obj = FindObject(object_id);
+                var obj = FindObject(object_id);
                 if (obj == null)
                 {
                     obj = new Object();
                     obj.Type = object_id.type;
                     obj.Instance = object_id.instance;
-                    Object[] arr = Objects;
+                    var arr = Objects;
                     Array.Resize<Object>(ref arr, arr.Length + 1);
                     arr[arr.Length - 1] = obj;
                     Objects = arr;
@@ -272,7 +268,7 @@ namespace System.IO.BACnet.Storage
                 //add property
                 p = new Property();
                 p.Id = property_id;
-                Property[] props = obj.Properties;
+                var props = obj.Properties;
                 Array.Resize<Property>(ref props, props.Length + 1);
                 props[props.Length - 1] = p;
                 obj.Properties = props;
@@ -281,7 +277,7 @@ namespace System.IO.BACnet.Storage
             //set type if needed
             if (p.Tag == BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL && value != null)
             {
-                foreach (BacnetValue v in value)
+                foreach (var v in value)
                 {
                     if (v.Tag != BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL)
                     {
@@ -307,23 +303,23 @@ namespace System.IO.BACnet.Storage
             if (!(property_id == BacnetPropertyIds.PROP_PRESENT_VALUE))
                 return DeviceStorage.ErrorCodes.NotForMe;
 
-            Property p_presentvalue = FindProperty(object_id, BacnetPropertyIds.PROP_PRESENT_VALUE);
+            var p_presentvalue = FindProperty(object_id, BacnetPropertyIds.PROP_PRESENT_VALUE);
             if (p_presentvalue == null)
                 return DeviceStorage.ErrorCodes.NotForMe;
 
-            Property p_relinquish = FindProperty(object_id, BacnetPropertyIds.PROP_RELINQUISH_DEFAULT);
+            var p_relinquish = FindProperty(object_id, BacnetPropertyIds.PROP_RELINQUISH_DEFAULT);
             if (p_relinquish == null)
                 return DeviceStorage.ErrorCodes.NotForMe;
 
-            Property p_outofservice = FindProperty(object_id, BacnetPropertyIds.PROP_OUT_OF_SERVICE);
+            var p_outofservice = FindProperty(object_id, BacnetPropertyIds.PROP_OUT_OF_SERVICE);
             if (p_outofservice == null)
                 return DeviceStorage.ErrorCodes.NotForMe;
 
-            Property p_array = FindProperty(object_id, BacnetPropertyIds.PROP_PRIORITY_ARRAY);
+            var p_array = FindProperty(object_id, BacnetPropertyIds.PROP_PRIORITY_ARRAY);
             if (p_array == null)
                 return DeviceStorage.ErrorCodes.NotForMe;
 
-            DeviceStorage.ErrorCodes errorcode = DeviceStorage.ErrorCodes.GenericError;
+            var errorcode = DeviceStorage.ErrorCodes.GenericError;
 
             try
             {
@@ -362,8 +358,8 @@ namespace System.IO.BACnet.Storage
                 if (errorcode == DeviceStorage.ErrorCodes.Good)
                 {
 
-                    bool done = false;
-                    for (int i = 0; i < 16; i++)
+                    var done = false;
+                    for (var i = 0; i < 16; i++)
                     {
                         if (valueArray[i].Value != null)    // A value is OK
                         {
@@ -375,7 +371,7 @@ namespace System.IO.BACnet.Storage
                     }
                     if (done == false)  // Nothing in the array : PROP_PRESENT_VALUE = PROP_RELINQUISH_DEFAULT
                     {
-                        IList<BacnetValue> DefaultValue = p_relinquish.BacnetValue;
+                        var DefaultValue = p_relinquish.BacnetValue;
                         p_presentvalue.BacnetValue = DefaultValue;
                     }
                 }
@@ -392,10 +388,10 @@ namespace System.IO.BACnet.Storage
 
         public ErrorCodes[] WritePropertyMultiple(BacnetObjectId object_id, ICollection<BacnetPropertyValue> values)
         {
-            ErrorCodes[] ret = new ErrorCodes[values.Count];
+            var ret = new ErrorCodes[values.Count];
 
-            int count = 0;
-            foreach (BacnetPropertyValue entry in values)
+            var count = 0;
+            foreach (var entry in values)
             {
                 ret[count] = WriteProperty(object_id, (BacnetPropertyIds)entry.property.propertyIdentifier, entry.property.propertyArrayIndex, entry.value);
                 count++;
@@ -410,8 +406,8 @@ namespace System.IO.BACnet.Storage
         /// <param name="path"></param>
         public void Save(string path)
         {
-            System.Xml.Serialization.XmlSerializer s = new System.Xml.Serialization.XmlSerializer(typeof(DeviceStorage));
-            using (System.IO.FileStream fs = new System.IO.FileStream(path, System.IO.FileMode.Create, System.IO.FileAccess.Write))
+            var s = new System.Xml.Serialization.XmlSerializer(typeof(DeviceStorage));
+            using (var fs = new System.IO.FileStream(path, System.IO.FileMode.Create, System.IO.FileAccess.Write))
             {
                 s.Serialize(fs, this);
             }
@@ -441,13 +437,13 @@ namespace System.IO.BACnet.Storage
                 _textStreamReader = new StreamReader(path);
             }
 
-            System.Xml.Serialization.XmlSerializer s = new System.Xml.Serialization.XmlSerializer(typeof(DeviceStorage));
+            var s = new System.Xml.Serialization.XmlSerializer(typeof(DeviceStorage));
             using (_textStreamReader)
             {
-                DeviceStorage ret = (DeviceStorage)s.Deserialize(_textStreamReader);
+                var ret = (DeviceStorage)s.Deserialize(_textStreamReader);
 
                 //set device_id
-                Object obj = ret.FindObject(BacnetObjectTypes.OBJECT_DEVICE);
+                var obj = ret.FindObject(BacnetObjectTypes.OBJECT_DEVICE);
                 if (obj != null)
                     ret.DeviceId = obj.Instance;
 
@@ -588,9 +584,9 @@ namespace System.IO.BACnet.Storage
                         }
                         else
                         {
-                            string ret = "";
-                            BacnetValue[] arr = (BacnetValue[])value.Value;
-                            foreach (BacnetValue v in arr)
+                            var ret = "";
+                            var arr = (BacnetValue[])value.Value;
+                            foreach (var v in arr)
                             {
                                 ret += ";" + SerializeValue(v, v.Tag);
                             }
@@ -608,8 +604,8 @@ namespace System.IO.BACnet.Storage
             get
             {
                 if (Value == null) return new BacnetValue[0];
-                BacnetValue[] ret = new BacnetValue[Value.Length];
-                for (int i = 0; i < ret.Length; i++)
+                var ret = new BacnetValue[Value.Length];
+                for (var i = 0; i < ret.Length; i++)
                 {
                     ret[i] = DeserializeValue(Value[i], Tag);
                 }
@@ -618,13 +614,13 @@ namespace System.IO.BACnet.Storage
             set
             {
                 //count
-                int count = 0;
-                foreach(BacnetValue v in value)
+                var count = 0;
+                foreach(var v in value)
                     count++;
 
-                string[] str_values = new string[count];
+                var str_values = new string[count];
                 count = 0;
-                foreach (BacnetValue v in value)
+                foreach (var v in value)
                 {
                     str_values[count] = SerializeValue(v, Tag);
                     count++;

@@ -25,7 +25,6 @@
 *********************************************************************/
 
 using System;
-using System.Collections.Generic;
 using System.Windows.Forms;
 using System.Reflection;
 using System.IO;
@@ -45,7 +44,7 @@ namespace Yabe
             AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
             {
 
-                Assembly thisAssembly = Assembly.GetExecutingAssembly();
+                var thisAssembly = Assembly.GetExecutingAssembly();
 
                 //Get the Name of the AssemblyFile
                 var name = args.Name.Substring(0, args.Name.IndexOf(',')) + ".dll";
@@ -55,7 +54,7 @@ namespace Yabe
                 if (resources.Count() > 0)
                 {
                     var resourceName = resources.First();
-                    using (Stream stream = thisAssembly.GetManifestResourceStream(resourceName))
+                    using (var stream = thisAssembly.GetManifestResourceStream(resourceName))
                     {
                         if (stream == null) return null;
                         var block = new byte[stream.Length];

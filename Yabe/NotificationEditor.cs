@@ -25,11 +25,6 @@
 *********************************************************************/
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using System.IO.BACnet;
 using System.IO.BACnet.Serialize;
@@ -59,7 +54,7 @@ namespace Yabe
             RecipientsTab.Controls.Clear();
 
             // Two properties
-            List<BacnetPropertyReference> props = new List<BacnetPropertyReference>();
+            var props = new List<BacnetPropertyReference>();
             props.Add(new BacnetPropertyReference((uint)BacnetPropertyIds.PROP_RECIPIENT_LIST, ASN1.BACNET_ARRAY_ALL));
             props.Add(new BacnetPropertyReference((uint)BacnetPropertyIds.PROP_PRIORITY, ASN1.BACNET_ARRAY_ALL));
             IList<BacnetReadAccessResult> PropertiesValues;
@@ -77,16 +72,16 @@ namespace Yabe
                 else
                 {
                     // a TabPage in the TabControl for each recipient
-                    for (int i = 0; i < aProp.value.Count / 7; i++)
+                    for (var i = 0; i < aProp.value.Count / 7; i++)
                     {
                         // convert the List<BacnetValue> into a DeviceReportingRecipient
-                        DeviceReportingRecipient recipient=new DeviceReportingRecipient(aProp.value[i * 7], aProp.value[i * 7 + 1], aProp.value[i * 7 + 2], aProp.value[i * 7 + 3], aProp.value[i * 7 + 4], aProp.value[i * 7 + 5], aProp.value[i * 7 + 6]);
+                        var recipient=new DeviceReportingRecipient(aProp.value[i * 7], aProp.value[i * 7 + 1], aProp.value[i * 7 + 2], aProp.value[i * 7 + 3], aProp.value[i * 7 + 4], aProp.value[i * 7 + 5], aProp.value[i * 7 + 6]);
 
-                        TabPage NewTab = new System.Windows.Forms.TabPage();
+                        var NewTab = new System.Windows.Forms.TabPage();
                         NewTab.Text = NewTab.Name = i.ToString();
 
                         // Create a Usercontrol and put it into the TabPage
-                        RecipientUserCtrl content = new RecipientUserCtrl(NewTab, recipient);
+                        var content = new RecipientUserCtrl(NewTab, recipient);
                         content.DeviceAddrOK += new Action<RecipientUserCtrl, bool>(content_DeviceAddrOK);
 
                         NewTab.Controls.Add(content);
@@ -103,7 +98,7 @@ namespace Yabe
         {
             try // Write Priorities
             {
-                List<BacnetValue> PropVal=new List<BacnetValue>();
+                var PropVal=new List<BacnetValue>();
 
                 PropVal.Add(new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT, Convert.ToUInt32(P_Off.Text)));
                 PropVal.Add(new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT, Convert.ToUInt32(P_Fault.Text)));
@@ -114,12 +109,12 @@ namespace Yabe
             catch { }
             try  // Write recipient List
             {
-                List<BacnetValue> PropVal = new List<BacnetValue>();
+                var PropVal = new List<BacnetValue>();
                 foreach (TabPage t in RecipientsTab.Controls)
                 {
                     if (t.Name != "Not Set") // Entry is OK ?
                     {
-                        RecipientUserCtrl r=(RecipientUserCtrl)t.Controls[0];
+                        var r=(RecipientUserCtrl)t.Controls[0];
                         DeviceReportingRecipient newrp;
                         if (r.adr!=null) // recipient is an IP address
                             newrp=new DeviceReportingRecipient(r.WeekOfDay,r.fromTime.Value,r.toTime.Value,r.adr,Convert.ToUInt16(r.ProcessId.Text),r.AckRequired.Checked,r.EventType);
@@ -143,7 +138,7 @@ namespace Yabe
                 Sender.myTab.Text = Sender.myTab.Name = ""; 
 
             // Re-numbering of each TabPage
-            int i = 1;
+            var i = 1;
             foreach (TabPage t in RecipientsTab.Controls)
                 if (t.Name != "Not Set")
                 {
@@ -160,7 +155,7 @@ namespace Yabe
             }
             catch { }
 
-            int i=1;
+            var i=1;
             labelEmpty.Visible = true;
             foreach (TabPage t in RecipientsTab.Controls) // Re-numbering of each TabPage
             {
@@ -175,10 +170,10 @@ namespace Yabe
             foreach (TabPage t in RecipientsTab.Controls)
                 if (t.Name == "Not Set") return;
 
-            TabPage NewTab = new System.Windows.Forms.TabPage();
+            var NewTab = new System.Windows.Forms.TabPage();
             NewTab.Text = NewTab.Name = "Not Set";
 
-            RecipientUserCtrl content = new RecipientUserCtrl(NewTab);
+            var content = new RecipientUserCtrl(NewTab);
             content.DeviceAddrOK += new Action<RecipientUserCtrl, bool>(content_DeviceAddrOK);
 
             NewTab.Controls.Add(content);
@@ -192,7 +187,7 @@ namespace Yabe
         private void btReadWrite_Click(object sender, EventArgs e)
         {
             WriteProperties();
-            int idx=RecipientsTab.SelectedIndex;
+            var idx=RecipientsTab.SelectedIndex;
             LoadProperties();
             try { RecipientsTab.SelectedIndex = idx; } catch { }
         }
@@ -283,15 +278,15 @@ namespace Yabe
 
         private void Day_CheckStateChanged(object sender, EventArgs e)
         {
-            CheckBox cb = (CheckBox)sender;
-            int num = Convert.ToInt32(cb.Tag) - 1;
+            var cb = (CheckBox)sender;
+            var num = Convert.ToInt32(cb.Tag) - 1;
             WeekOfDay.SetBit((byte)num, cb.Checked);
         }
 
         private void EventType_CheckedChanged(object sender, EventArgs e)
         {
-            CheckBox cb = (CheckBox)sender;
-            int num = Convert.ToInt32(cb.Tag) - 1;
+            var cb = (CheckBox)sender;
+            var num = Convert.ToInt32(cb.Tag) - 1;
             EventType.SetBit((byte)num, cb.Checked);
         }
 

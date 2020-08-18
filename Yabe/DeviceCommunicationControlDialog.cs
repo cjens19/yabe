@@ -25,11 +25,6 @@
 *********************************************************************/
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Text;
 using System.Windows.Forms;
 
 namespace Yabe
@@ -63,8 +58,8 @@ namespace Yabe
 
         private void DeviceCommunicationControlDialog_Load(object sender, EventArgs e)
         {
-            string[] names = Enum.GetNames(typeof(System.IO.BACnet.BacnetReinitializedStates));
-            for (int i = 0; i < names.Length; i++)
+            var names = Enum.GetNames(typeof(System.IO.BACnet.BacnetReinitializedStates));
+            for (var i = 0; i < names.Length; i++)
                 names[i] = names[i].Replace("BACNET_REINIT_", "");
             m_StateCombo.Items.AddRange(names);
             if (names.Length > 0)

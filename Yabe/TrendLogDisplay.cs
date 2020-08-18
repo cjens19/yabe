@@ -25,14 +25,9 @@
 *********************************************************************/
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using System.IO.BACnet;
-using System.IO.BACnet.Serialize;
 using System.Threading;
 using ZedGraph;
 using System.IO;
@@ -66,7 +61,7 @@ namespace Yabe
         {
             Application.DoEvents(); // Required on Linux/Unbuntu
 
-            ToolTip ToolTip1 = new ToolTip();
+            var ToolTip1 = new ToolTip();
             ToolTip1.SetToolTip(m_progressBar, "Click here to stop download");
 
             m_zedGraphCtl.GraphPane.XAxis.Type = AxisType.Date;
@@ -98,7 +93,7 @@ namespace Yabe
             if ((Logsize != 0) && (CurvesNumber != 0))
             {
                 Pointslists = new PointPairList[CurvesNumber];
-                for (int i = 0; i < CurvesNumber; i++)
+                for (var i = 0; i < CurvesNumber; i++)
                     Pointslists[i] = new PointPairList();
 
                 NbRecordsByStep = NbRecordsByStep - 5 * CurvesNumber;
@@ -106,7 +101,7 @@ namespace Yabe
                 this.UseWaitCursor = true;
 
                 // Start downloads in thread
-                Thread th = new Thread(DownloadFullTrendLog);
+                var th = new Thread(DownloadFullTrendLog);
                 th.IsBackground = true;
                 th.Start();
             }
@@ -129,19 +124,19 @@ namespace Yabe
         {
             this.UseWaitCursor = false; // no more needed, progress bar is moving
             m_progressBar.Value += ValueAdd;
-            int Percent = m_progressBar.Value * 100 / Logsize;
+            var Percent = m_progressBar.Value * 100 / Logsize;
 
             m_progresslabel.Text = "Downloads of " + Logsize + " records in progress (" + Percent.ToString() + "%)";
         }
 
         private void UpdateEnd(bool state)
         {
-            ColorSymbolRotator color = new ColorSymbolRotator();
+            var color = new ColorSymbolRotator();
 
             // Even if an error occurs during downloads, maybe some values are OK
-            for (int i = 0; i < CurvesNumber; i++)
+            for (var i = 0; i < CurvesNumber; i++)
             {
-                LineItem l = m_zedGraphCtl.GraphPane.AddCurve("", Pointslists[i], color.NextColor, SymbolType.None);
+                var l = m_zedGraphCtl.GraphPane.AddCurve("", Pointslists[i], color.NextColor, SymbolType.None);
                 l.Line.Width = 2;
             }
             m_zedGraphCtl.GraphPane.Chart.Fill = new Fill(Color.White, Color.FromArgb(255, 255, 190), 45F);
@@ -242,8 +237,8 @@ namespace Yabe
                         return;
                     }
 
-                    int len = 0;
-                    for (int itm = 0; itm < ItemCount; itm++)
+                    var len = 0;
+                    for (var itm = 0; itm < ItemCount; itm++)
                     {
                         //decode
                         BacnetLogRecord[] records;
@@ -257,7 +252,7 @@ namespace Yabe
                         len += l;
 
                         //update interface
-                        for (int i = 0; i < records.Length; i++, Idx++)
+                        for (var i = 0; i < records.Length; i++, Idx++)
                         {
                             if(records[i].type == BacnetTrendLogValueType.TL_TYPE_UNSIGN || records[i].type == BacnetTrendLogValueType.TL_TYPE_SIGN || records[i].type == BacnetTrendLogValueType.TL_TYPE_REAL)
                                 Pointslists[i].Add(new XDate(records[i].timestamp), (double)Convert.ChangeType(records[i].Value, typeof(double)));
@@ -293,15 +288,15 @@ namespace Yabe
         // http://sourceforge.net/p/zedgraph/patches/20/ Patch applied in the attached zedgraph library
         string m_zedGraphCtl_PointValueEvent(ZedGraphControl sender, GraphPane pane, CurveItem curve, int iPt)
         {
-            PointPair pt = curve[iPt];
-            XDate d = new XDate(pt.X);
+            var pt = curve[iPt];
+            var d = new XDate(pt.X);
             DateTime dt = d;
 
             // auto adjustable digit precision, quite a copyright here :=)
-            String ValStr = "0";
+            var ValStr = "0";
             if (pt.Y != 0)
             {
-                int resolution = (int)Math.Max(0, Math.Ceiling(4 - Math.Log10(Math.Abs(pt.Y))));
+                var resolution = (int)Math.Max(0, Math.Ceiling(4 - Math.Log10(Math.Abs(pt.Y))));
                 ValStr = Math.Round(pt.Y, resolution).ToString();
             }
             return "Date : "+dt.ToString() + "\nValue : " + ValStr; 
@@ -313,7 +308,7 @@ namespace Yabe
         // thank's to http://www.smallguru.com/2009/06/zedgraph-csharp-graph-data-export-to-cs/
         void m_zedGraphCtl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
-            ToolStripMenuItem _item = new ToolStripMenuItem();
+            var _item = new ToolStripMenuItem();
             // This is the text that will show up in the menu
             _item.Text = "Export Data as CSV";
             _item.Click += new EventHandler(ShowSaveAsForExportCSV);
@@ -325,10 +320,10 @@ namespace Yabe
             try
             {
                 //show saveAs CmdDlg
-                SaveFileDialog saveFileDialog1 = new SaveFileDialog();
+                var saveFileDialog1 = new SaveFileDialog();
                 saveFileDialog1.Filter = "CSV files (*.csv)|*.csv";
                 saveFileDialog1.ShowDialog();
-                StreamWriter CSVWriter = new StreamWriter(saveFileDialog1.FileName);
+                var CSVWriter = new StreamWriter(saveFileDialog1.FileName);
                 WriteCSVToStream(CSVWriter);
                 CSVWriter.Close();
             }
@@ -341,19 +336,19 @@ namespace Yabe
         {
             //First line is for Headers, X and Y Axis
             CSVWriter.Write("Date/Time");
-            for (int i = 0; i < Pointslists.Length; i++)
+            for (var i = 0; i < Pointslists.Length; i++)
                 CSVWriter.Write(";Values");
             CSVWriter.WriteLine();
 
             //subsequent lines are having data
-            for (int i = 0; i < Pointslists[0].Count; i++)
+            for (var i = 0; i < Pointslists[0].Count; i++)
             {
-                XDate d = new XDate(Pointslists[0][i].X);
+                var d = new XDate(Pointslists[0][i].X);
                 DateTime dt = d;    // to get the second
                 CSVWriter.Write(dt.ToString());
-                for (int cv = 0; cv < Pointslists.Length; cv++)
+                for (var cv = 0; cv < Pointslists.Length; cv++)
                 {
-                    double val = Pointslists[cv][i].Y;
+                    var val = Pointslists[cv][i].Y;
                     if (d != double.NaN)
                         CSVWriter.Write(";" + Pointslists[cv][i].Y);
                     else
@@ -367,7 +362,7 @@ namespace Yabe
 
         private void AddToList(int sequence_no, DateTime dt, BacnetTrendLogValueType type, object value, uint status)
         {
-            ListViewItem itm = new ListViewItem();
+            var itm = new ListViewItem();
             itm.Text = sequence_no.ToString();
             itm.SubItems.Add(dt.ToString());
             itm.SubItems.Add(System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(type.ToString().ToLower().Substring(8)));
