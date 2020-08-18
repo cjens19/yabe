@@ -39,7 +39,7 @@ namespace Yabe
     {
         int Logsize;
         PointPairList[] Pointslists;
-        BacnetClient comm; BacnetAddress adr; BacnetObjectId object_id;
+        BacnetClient comm; BacnetAddress adr; BacnetObject object_id;
         // Number of records read per ReadRange request
         // 60 is a good value for quite full Udp/Ipv4/Ethernet packets
         // otherwise it could be rejected, or fragmented by Ip, or ...
@@ -48,7 +48,7 @@ namespace Yabe
 
         bool StopDownload = false;
 
-        public TrendLogDisplay(BacnetClient comm, BacnetAddress adr, BacnetObjectId object_id)
+        public TrendLogDisplay(BacnetClient comm, BacnetAddress adr, BacnetObject object_id)
         {
 
             InitializeComponent();
@@ -155,7 +155,7 @@ namespace Yabe
         }
 
         // Get the numbers of records in the Log
-        private int ReadRangeSize(BacnetClient comm, BacnetAddress adr, BacnetObjectId object_id)
+        private int ReadRangeSize(BacnetClient comm, BacnetAddress adr, BacnetObject object_id)
         {
             IList<BacnetValue> value;
             try
@@ -174,7 +174,7 @@ namespace Yabe
         }
 
         // PROP_OBJECT_NAME is used, could be PROP_OBJECT_DESCRIPTION maybe
-        private string ReadCurveName(BacnetClient comm, BacnetAddress adr, BacnetObjectId object_id)
+        private string ReadCurveName(BacnetClient comm, BacnetAddress adr, BacnetObject object_id)
         {
             IList<BacnetValue> value;
             try
@@ -191,7 +191,7 @@ namespace Yabe
             }
         }
         // Only for MULTIPLE TREND LOG
-        private int ReadNumberofCurves(BacnetClient comm, BacnetAddress adr, BacnetObjectId object_id)
+        private int ReadNumberofCurves(BacnetClient comm, BacnetAddress adr, BacnetObject object_id)
         {
             IList<BacnetValue> value;
             try

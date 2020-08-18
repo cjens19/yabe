@@ -56,7 +56,7 @@ namespace Yabe
 
         // Memory of all object names already discovered, first string in the Tuple is the device network address hash
         // The tuple contains two value types, so it's ok for cross session
-        public Dictionary<Tuple<string, BacnetObjectId>, string> DevicesObjectsName = new Dictionary<Tuple<string, BacnetObjectId>, string>();
+        public Dictionary<Tuple<string, BacnetObject>, string> DevicesObjectsName = new Dictionary<Tuple<string, BacnetObject>, string>();
 
         private uint _mNextSubscriptionId = 0;
 
@@ -82,8 +82,9 @@ namespace Yabe
         public YabeMainDialog()
         {
             _yabeFrm = this;
-
+            
             InitializeComponent();
+            Text = $"Yet Another BACnet Explorer by Igor - {Assembly.GetExecutingAssembly().GetName().Version}";
             Trace.Listeners.Add(new MyTraceListener(this));
             m_DeviceTree.ExpandAll();
 
@@ -129,7 +130,7 @@ namespace Yabe
                 // Try to open the current (if exist) object Id<-> object name mapping file
                 Stream stream = File.Open(Properties.Settings.Default.ObjectNameFile, FileMode.Open);
                 var bf = new BinaryFormatter();
-                var d = (Dictionary<Tuple<string, BacnetObjectId>, string>)bf.Deserialize(stream);
+                var d = (Dictionary<Tuple<string, BacnetObject>, string>)bf.Deserialize(stream);
                 stream.Close();
 
                 if (d != null) DevicesObjectsName = d;
@@ -138,6 +139,13 @@ namespace Yabe
             {
                 //ignore
             }
+        }
+
+        [Localizable(false)]
+        public sealed override string Text
+        {
+            get { return base.Text; }
+            set { base.Text = value; }
         }
 
         private static string ConvertToText(IList<BacnetValue> values)
@@ -191,7 +199,7 @@ namespace Yabe
                 return;
             }
 
-            var subKey = eventData.initiatingObjectIdentifier.instance + ":" + eventData.eventObjectIdentifier.type + ":" + eventData.eventObjectIdentifier.instance;
+            var subKey = eventData.initiatingObjectIdentifier.instanceId + ":" + eventData.eventObjectIdentifier.type + ":" + eventData.eventObjectIdentifier.instanceId;
 
             ListViewItem itm = null;
             // find the Event in the View
@@ -208,8 +216,8 @@ namespace Yabe
             {
                 itm = m_SubscriptionView.Items.Add(adr.ToString());
                 itm.Tag = subKey;
-                itm.SubItems.Add("OBJECT_DEVICE:" + eventData.initiatingObjectIdentifier.instance);
-                itm.SubItems.Add(eventData.eventObjectIdentifier.type + ":" + eventData.eventObjectIdentifier.instance);   //name
+                itm.SubItems.Add("OBJECT_DEVICE:" + eventData.initiatingObjectIdentifier.instanceId);
+                itm.SubItems.Add(eventData.eventObjectIdentifier.type + ":" + eventData.eventObjectIdentifier.instanceId);   //name
                 itm.SubItems.Add(EventTypeNiceName(eventData.fromState) + " to " + EventTypeNiceName(eventData.toState));
                 itm.SubItems.Add(eventData.timeStamp.Time.ToString(Properties.Settings.Default.COVTimeFormater));   //time
                 itm.SubItems.Add(eventData.notifyType.ToString());   //status
@@ -231,9 +239,9 @@ namespace Yabe
 
         }
 
-        private void OnCOVNotification(BacnetClient sender, BacnetAddress adr, byte invokeId, uint subscriberProcessIdentifier, BacnetObjectId initiatingDeviceIdentifier, BacnetObjectId monitoredObjectIdentifier, uint timeRemaining, bool needConfirm, ICollection<BacnetPropertyValue> values, BacnetMaxSegments maxSegments)
+        private void OnCOVNotification(BacnetClient sender, BacnetAddress adr, byte invokeId, uint subscriberProcessIdentifier, BacnetObject initiatingDeviceIdentifier, BacnetObject monitoredObjectIdentifier, uint timeRemaining, bool needConfirm, ICollection<BacnetPropertyValue> values, BacnetMaxSegments maxSegments)
         {
-            var subKey = adr + ":" + initiatingDeviceIdentifier.instance + ":" + subscriberProcessIdentifier;
+            var subKey = adr + ":" + initiatingDeviceIdentifier.instanceId + ":" + subscriberProcessIdentifier;
 
             lock (_mSubscriptionList)
                 if (_mSubscriptionList.ContainsKey(subKey))
@@ -434,7 +442,7 @@ namespace Yabe
             if (pluginsToolStripMenuItem.DropDownItems.Count == 0) pluginsToolStripMenuItem.Visible = false;
         }
 
-        private TreeNode FindCommTreeNode(BacnetClient comm)
+        private TreeNode FindDeviceTreeNode(BacnetClient comm)
         {
             foreach (TreeNode node in m_DeviceTree.Nodes[0].Nodes)
             {
@@ -443,7 +451,7 @@ namespace Yabe
             return null;
         }
 
-        private TreeNode FindCommTreeNode(IBacnetTransport transport)
+        private TreeNode FindDeviceTreeNode(IBacnetTransport transport)
         {
             foreach (TreeNode node in m_DeviceTree.Nodes[0].Nodes)
             {
@@ -467,7 +475,7 @@ namespace Yabe
             //ignore whoIs responses from other devices (or loopbacks)
         }
 
-        private static void OnReadPropertyRequest(BacnetClient sender, BacnetAddress adr, byte invokeId, BacnetObjectId objectId, BacnetPropertyReference property, BacnetMaxSegments maxSegments)
+        private static void OnReadPropertyRequest(BacnetClient sender, BacnetAddress adr, byte invokeId, BacnetObject objectId, BacnetPropertyReference property, BacnetMaxSegments maxSegments)
         {
             lock (_mStorage)
             {
@@ -530,14 +538,14 @@ namespace Yabe
             //update GUI
             BeginInvoke((MethodInvoker)delegate
             {
-                var parent = FindCommTreeNode(sender);
+                var parent = FindDeviceTreeNode(sender);
                 if (parent == null) return;
 
                 var propObjectNameOk = false;
                 string identifier = null;
 
                 lock (DevicesObjectsName)
-                    propObjectNameOk = DevicesObjectsName.TryGetValue(new Tuple<string, BacnetObjectId>(adr.FullHashString(), new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, deviceId)), out identifier);
+                    propObjectNameOk = DevicesObjectsName.TryGetValue(new Tuple<string, BacnetObject>(adr.FullHashString(), new BacnetObject(BacnetObjectTypes.OBJECT_DEVICE, deviceId)), out identifier);
 
                 //update existing (this can happen in MSTP)
                 foreach (TreeNode s in parent.Nodes)
@@ -595,7 +603,7 @@ namespace Yabe
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show(this, "Yet Another Bacnet Explorer - Igor 1.0\nVersion " + GetType().Assembly.GetName().Version + "\nBy Morten Kvistgaard - Copyright 2014-2017\nBy Frederic Chaxel - Copyright 2015-2018\nBy Chris Jenson - Copyright 2020\n" +
+            MessageBox.Show(this, "Yet Another Bacnet Explorer - Igor\nVersion " + GetType().Assembly.GetName().Version + "\nBy Morten Kvistgaard - Copyright 2014-2017\nBy Frederic Chaxel - Copyright 2015-2018\nBy Chris Jenson - Copyright 2020\n" +
                 "\nReferences:" +
                 "\nhttp://bacnet.sourceforge.net/" +
                 "\nhttp://www.unified-automation.com/products/development-tools/uaexpert.html" +
@@ -734,7 +742,7 @@ namespace Yabe
                         deviceLine.MstpSourcesSeen.Add(sourceAddress);
 
                         //find parent node
-                        var parent = FindCommTreeNode(sender);
+                        var parent = FindDeviceTreeNode(sender);
 
                         //find "free" node. The "free" node might have been added
                         TreeNode freeNode = null;
@@ -772,7 +780,7 @@ namespace Yabe
                         deviceLine.MstpPfmDestinationsSeen.Add(destinationAddress);
                         if (!deviceLine.MstpSourcesSeen.Contains(destinationAddress) && Properties.Settings.Default.MSTP_DisplayFreeAddresses)
                         {
-                            var parent = FindCommTreeNode(sender);
+                            var parent = FindDeviceTreeNode(sender);
                             if (IsDisposed) return;
                             Invoke((MethodInvoker)delegate
                             {
@@ -802,7 +810,7 @@ namespace Yabe
             foreach (var entry in _mSubscriptionList)
             {
                 var sub = (Subscription)entry.Value.Tag;
-                if (((sub.Address == adr) && (sub.DeviceId.instance == deviceId)) || (sub.Client == comm))
+                if (((sub.Address == adr) && (sub.DeviceId.instanceId == deviceId)) || (sub.Client == comm))
                 {
                     m_SubscriptionView.Items.Remove(entry.Value);
                     deletes.AddLast(sub.SubscriptionKey);
@@ -914,46 +922,47 @@ namespace Yabe
             node.SelectedImageIndex = node.ImageIndex;
         }
 
-        private void AddObjectEntry(BacnetClient comm, BacnetAddress adr, string name, BacnetObjectId objectId, TreeNodeCollection nodes)
+        private void AddObjectEntry(BacnetClient client, BacnetAddress address, string name, BacnetObject bacnetObject, TreeNodeCollection nodes)
         {
-            if (string.IsNullOrEmpty(name)) name = objectId.ToString();
+            if (string.IsNullOrEmpty(name)) name = bacnetObject.ToString();
 
             TreeNode node;
 
             if (name.StartsWith("OBJECT_"))
                 node = nodes.Add(name.Substring(7));
             else
-                node = nodes.Add("PROPRIETARY:" + objectId.Instance + " (" + name + ")");  // Propertary Objects not in enum appears only with the number such as 584:0
+                node = nodes.Add("PROPRIETARY:" + bacnetObject.Instance + " (" + name + ")");  // Proprietary Objects not in enum appears only with the number such as 584:0
 
-            node.Tag = objectId;
+            node.Tag = bacnetObject;
+            node.Checked = bacnetObject.Exportable;
 
             //icon
-            SetNodeIcon(objectId.type, node);
+            SetNodeIcon(bacnetObject.type, node);
 
             // Get the property name if already known
-            string propName;
+            string propertyName;
 
             lock (DevicesObjectsName)
-                if (DevicesObjectsName.TryGetValue(new Tuple<string, BacnetObjectId>(adr.FullHashString(), objectId), out propName) == true)
+                if (DevicesObjectsName.TryGetValue(new Tuple<string, BacnetObject>(address.FullHashString(), bacnetObject), out propertyName) == true)
                 {
-                    ChangeTreeNodePropertyName(node, propName); ;
+                    ChangeTreeNodePropertyName(node, propertyName); ;
                 }
 
             //fetch sub properties
-            if (objectId.type == BacnetObjectTypes.OBJECT_GROUP)
-                FetchGroupProperties(comm, adr, objectId, node.Nodes);
-            else if ((objectId.type == BacnetObjectTypes.OBJECT_STRUCTURED_VIEW) && Properties.Settings.Default.DefaultPreferStructuredView)
-                FetchViewObjects(comm, adr, objectId, node.Nodes);
+            if (bacnetObject.type == BacnetObjectTypes.OBJECT_GROUP)
+                FetchGroupProperties(client, address, bacnetObject, node.Nodes);
+            else if ((bacnetObject.type == BacnetObjectTypes.OBJECT_STRUCTURED_VIEW) && Properties.Settings.Default.DefaultPreferStructuredView)
+                FetchViewObjects(client, address, bacnetObject, node.Nodes);
         }
 
-        private IList<BacnetValue> FetchStructuredObjects(BacnetClient comm, BacnetAddress adr, uint deviceId)
+        private static IList<BacnetValue> FetchStructuredObjects(BacnetClient comm, BacnetAddress adr, uint deviceId)
         {
             IList<BacnetValue> ret;
             var oldReties = comm.Retries;
             try
             {
                 comm.Retries = 1;       //only do 1 retry
-                if (!comm.ReadPropertyRequest(adr, new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, deviceId), BacnetPropertyIds.PROP_STRUCTURED_OBJECT_LIST, out ret))
+                if (!comm.ReadPropertyRequest(adr, new BacnetObject(BacnetObjectTypes.OBJECT_DEVICE, deviceId), BacnetPropertyIds.PROP_STRUCTURED_OBJECT_LIST, out ret))
                 {
                     Trace.TraceInformation("Didn't get response from 'Structured Object List'");
                     return null;
@@ -979,7 +988,7 @@ namespace Yabe
                 {
                     for (var i = 1; i <= count; i++)
                     {
-                        if (!comm.ReadPropertyRequest(adr, new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, deviceId), BacnetPropertyIds.PROP_OBJECT_LIST, out var valueList, 0, (uint)i))
+                        if (!comm.ReadPropertyRequest(adr, new BacnetObject(BacnetObjectTypes.OBJECT_DEVICE, deviceId), BacnetPropertyIds.PROP_OBJECT_LIST, out var valueList, 0, (uint)i))
                         {
                             MessageBox.Show("Couldn't fetch object list index", "Communication Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                             return;
@@ -993,7 +1002,7 @@ namespace Yabe
                             Invoke((MethodInvoker)delegate
                             {
                                 if (asynchRequestId != _asyncRequestId) return;  // another test in the GUI thread
-                                AddObjectEntry(comm, adr, null, (BacnetObjectId)value.Value, m_AddressSpaceTree.Nodes);
+                                AddObjectEntry(comm, adr, null, (BacnetObject)value.Value, m_AddressSpaceTree.Nodes);
                             });
                         }
                     }
@@ -1006,13 +1015,13 @@ namespace Yabe
             });
         }
 
-        private List<BacnetObjectId> SortBacnetObjects(IList<BacnetValue> rawList)
+        private static List<BacnetObject> SortBacnetObjects(IList<BacnetValue> rawList)
         {
 
-            var sortedList = new List<BacnetObjectId>();
+            var sortedList = new List<BacnetObject>();
             foreach (var value in rawList)
-                if (value.Value is BacnetObjectId) // with BacnetObjectId
-                    sortedList.Add((BacnetObjectId)value.Value);
+                if (value.Value is BacnetObject) // with BacnetObjectId
+                    sortedList.Add((BacnetObject)value.Value);
                 else // with Subordinate_List for StructuredView
                 {
                     var v = (BacnetDeviceObjectReference)value.Value;
@@ -1022,6 +1031,53 @@ namespace Yabe
             sortedList.Sort();
 
             return sortedList;
+        }
+        private void m_AddressSpaceTree_AfterCheck(object sender, TreeViewEventArgs e)
+        {
+            if (!(e.Node.Tag is BacnetObject bacnetObject)) return;
+
+            bacnetObject.Exportable = e.Node.Checked;
+        }
+        private void m_DeviceTree_BeforeCheck(object sender, TreeViewCancelEventArgs e)
+        {
+            _asyncRequestId++; // disabled a possible thread pool work (update) on the AddressSpaceTree
+            if (!(e.Node.Tag is KeyValuePair<BacnetAddress, uint> entry))
+            {
+                e.Cancel = true;
+            }
+        }
+
+        private void m_DeviceTree_AfterCheck(object sender, TreeViewEventArgs e)
+        {
+            _asyncRequestId++; // disabled a possible thread pool work (update) on the AddressSpaceTree
+            if (_busy) return;
+            _busy = true;
+            try
+            {
+                CheckChildNodes(e.Node, e.Node.Checked);
+                CheckObjectNodes(e.Node.Tag, e.Node.Checked);
+            }
+            finally
+            {
+                _busy = false;
+            }
+        }
+
+        private static void CheckObjectNodes(object tag, bool @checked)
+        {
+            if (!(tag is KeyValuePair<BacnetAddress, uint> device)) return;
+            {
+                var deviceId = device.Value;
+            }
+        }
+
+        private static void CheckChildNodes(TreeNode node, bool @checked)
+        {
+            foreach (TreeNode child in node.Nodes)
+            {
+                child.Checked = @checked;
+                CheckChildNodes(child, @checked);
+            }
         }
 
         private void m_DeviceTree_AfterSelect(object sender, TreeViewEventArgs e)
@@ -1033,24 +1089,24 @@ namespace Yabe
                 m_AddressSpaceTree.Nodes.Clear();   //clear
                 AddSpaceLabel.Text = "Address Space";
 
-                BacnetClient comm;
+                BacnetClient client;
 
                 if (e.Node.Parent.Tag is BacnetClient)  // A 'basic node'
-                    comm = (BacnetClient)e.Node.Parent.Tag;
+                    client = (BacnetClient)e.Node.Parent.Tag;
                 else  // A routed node
-                    comm = (BacnetClient)e.Node.Parent.Parent.Tag;
+                    client = (BacnetClient)e.Node.Parent.Parent.Tag;
 
-                var adr = entry.Key;
+                var bacnetAddress = entry.Key;
                 var deviceId = entry.Value;
 
                 //unconfigured MSTP?
-                if (comm.Transport is BacnetMstpProtocolTransport && ((BacnetMstpProtocolTransport)comm.Transport).SourceAddress == -1)
+                if (client.Transport is BacnetMstpProtocolTransport && ((BacnetMstpProtocolTransport)client.Transport).SourceAddress == -1)
                 {
                     if (MessageBox.Show("The MSTP transport is not yet configured. Would you like to set source_address now?", "Set Source Address", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No) return;
 
                     //find suggested address
                     byte address = 0xFF;
-                    var line = _mDevices[comm];
+                    var line = _mDevices[client];
                     lock (line.MstpSourcesSeen)
                     {
                         foreach (var s in line.MstpPfmDestinationsSeen)
@@ -1063,27 +1119,27 @@ namespace Yabe
                     //display choice
                     var dlg = new SourceAddressDialog {SourceAddress = address};
                     if (dlg.ShowDialog(this) == DialogResult.Cancel) return;
-                    ((BacnetMstpProtocolTransport)comm.Transport).SourceAddress = dlg.SourceAddress;
+                    ((BacnetMstpProtocolTransport)client.Transport).SourceAddress = dlg.SourceAddress;
                     Application.DoEvents();     //let the interface relax
                 }
 
                 //update "address space"?
                 Cursor = Cursors.WaitCursor;
                 Application.DoEvents();
-                var oldTimeout = comm.Timeout;
+                var oldTimeout = client.Timeout;
                 IList<BacnetValue> valueList = null;
                 try
                 {
                     //fetch structured view if possible
                     if (Properties.Settings.Default.DefaultPreferStructuredView)
-                        valueList = FetchStructuredObjects(comm, adr, deviceId);
+                        valueList = FetchStructuredObjects(client, bacnetAddress, deviceId);
 
                     //fetch normal list
                     if (valueList == null)
                     {
                         try
                         {
-                            if (!comm.ReadPropertyRequest(adr, new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, deviceId), BacnetPropertyIds.PROP_OBJECT_LIST, out valueList))
+                            if (!client.ReadPropertyRequest(bacnetAddress, new BacnetObject(BacnetObjectTypes.OBJECT_DEVICE, deviceId), BacnetPropertyIds.PROP_OBJECT_LIST, out valueList))
                             {
                                 Trace.TraceWarning("Didn't get response from 'Object List'");
                                 valueList = null;
@@ -1102,7 +1158,7 @@ namespace Yabe
                         try
                         {
                             //fetch object list count
-                            if (!comm.ReadPropertyRequest(adr, new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, deviceId), BacnetPropertyIds.PROP_OBJECT_LIST, out valueList, 0, 0))
+                            if (!client.ReadPropertyRequest(bacnetAddress, new BacnetObject(BacnetObjectTypes.OBJECT_DEVICE, deviceId), BacnetPropertyIds.PROP_OBJECT_LIST, out valueList, 0, 0))
                             {
                                 MessageBox.Show(this, "Couldn't fetch objects", "Communication Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                                 return;
@@ -1118,7 +1174,7 @@ namespace Yabe
                         {
                             var listCount = (uint)valueList[0].Value;
                             AddSpaceLabel.Text = "Address Space : " + listCount + " objects";
-                            AddObjectListOneByOneAsync(comm, adr, deviceId, listCount, _asyncRequestId);
+                            AddObjectListOneByOneAsync(client, bacnetAddress, deviceId, listCount, _asyncRequestId);
                             return;
                         }
                         else
@@ -1131,11 +1187,11 @@ namespace Yabe
                     var objectList = SortBacnetObjects(valueList);
                     AddSpaceLabel.Text = "Address Space : " + objectList.Count + " objects";
                     //add to tree
-                    foreach (var bobjId in objectList)
+                    foreach (var bacnetObject in objectList)
                     {
                         // Add FC
                         // If the Device name not set, try to update it
-                        if (bobjId.type == BacnetObjectTypes.OBJECT_DEVICE)
+                        if (bacnetObject.type == BacnetObjectTypes.OBJECT_DEVICE)
                         {
                             if (e.Node.ToolTipText == "")   // already update with the device name
                             {
@@ -1143,23 +1199,23 @@ namespace Yabe
                                 string identifier;
 
                                 lock (DevicesObjectsName)
-                                    propObjectNameOk = DevicesObjectsName.TryGetValue(new Tuple<string, BacnetObjectId>(adr.FullHashString(), bobjId), out identifier);
+                                    propObjectNameOk = DevicesObjectsName.TryGetValue(new Tuple<string, BacnetObject>(bacnetAddress.FullHashString(), bacnetObject), out identifier);
                                 if (propObjectNameOk)
                                 {
                                     e.Node.ToolTipText = e.Node.Text;
-                                    e.Node.Text = identifier + " [" + bobjId.Instance + "] ";
+                                    e.Node.Text = identifier + " [" + bacnetObject.Instance + "] ";
                                 }
                                 else
                                     try
                                     {
                                         IList<BacnetValue> values;
-                                        if (comm.ReadPropertyRequest(adr, bobjId, BacnetPropertyIds.PROP_OBJECT_NAME, out values))
+                                        if (client.ReadPropertyRequest(bacnetAddress, bacnetObject, BacnetPropertyIds.PROP_OBJECT_NAME, out values))
                                         {
                                             e.Node.ToolTipText = e.Node.Text;   // IP or MSTP node id -> in the Tooltip
-                                            e.Node.Text = values[0] + " [" + bobjId.Instance + "] ";  // change @ by the Name    
+                                            e.Node.Text = values[0] + " [" + bacnetObject.Instance + "] ";  // change @ by the Name    
                                             lock (DevicesObjectsName)
                                             {
-                                                var t = new Tuple<string, BacnetObjectId>(adr.FullHashString(), bobjId);
+                                                var t = new Tuple<string, BacnetObject>(bacnetAddress.FullHashString(), bacnetObject);
                                                 DevicesObjectsName.Remove(t);
                                                 DevicesObjectsName.Add(t, values[0].ToString());
                                             }
@@ -1169,7 +1225,7 @@ namespace Yabe
                             }
                         }
 
-                        AddObjectEntry(comm, adr, null, bobjId, m_AddressSpaceTree.Nodes);//AddObjectEntry(comm, adr, null, bobj_id, e.Node.Nodes); 
+                        AddObjectEntry(client, bacnetAddress, null, bacnetObject, m_AddressSpaceTree.Nodes);//AddObjectEntry(comm, adr, null, bobj_id, e.Node.Nodes); 
                     }
                 }
                 finally
@@ -1180,7 +1236,7 @@ namespace Yabe
             }
         }
 
-        private void FetchViewObjects(BacnetClient comm, BacnetAddress adr, BacnetObjectId objectId, TreeNodeCollection nodes)
+        private void FetchViewObjects(BacnetClient comm, BacnetAddress adr, BacnetObject objectId, TreeNodeCollection nodes)
         {
             try
             {
@@ -1202,7 +1258,7 @@ namespace Yabe
             }
         }
 
-        private void FetchGroupProperties(BacnetClient comm, BacnetAddress adr, BacnetObjectId objectId, TreeNodeCollection nodes)
+        private void FetchGroupProperties(BacnetClient comm, BacnetAddress adr, BacnetObject objectId, TreeNodeCollection nodes)
         {
             try
             {
@@ -1257,7 +1313,7 @@ namespace Yabe
             return name;
         }
 
-        private bool ReadProperty(BacnetClient comm, BacnetAddress adr, BacnetObjectId objectId, BacnetPropertyIds propertyId, ref IList<BacnetPropertyValue> values, uint arrayIndex = System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL)
+        private bool ReadProperty(BacnetClient comm, BacnetAddress adr, BacnetObject objectId, BacnetPropertyIds propertyId, ref IList<BacnetPropertyValue> values, uint arrayIndex = System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL)
         {
             var newEntry = new BacnetPropertyValue
             {
@@ -1278,7 +1334,7 @@ namespace Yabe
             return true;
         }
 
-        private bool ReadAllPropertiesBySingle(BacnetClient comm, BacnetAddress adr, BacnetObjectId objectId, out IList<BacnetReadAccessResult> valueList)
+        private bool ReadAllPropertiesBySingle(BacnetClient comm, BacnetAddress adr, BacnetObject objectId, out IList<BacnetReadAccessResult> valueList)
         {
 
             if (_objectsDescriptionDefault == null)  // first call, Read Objects description from internal & optional external xml file
@@ -1395,11 +1451,11 @@ namespace Yabe
                 else
                     comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Parent.Tag;  // routed node
 
-                if (selectedNode.Tag is BacnetObjectId)
+                if (selectedNode.Tag is BacnetObject)
                 {
                     m_DataGrid.SelectedObject = null;   //clear
 
-                    var objectId = (BacnetObjectId)selectedNode.Tag;
+                    var objectId = (BacnetObject)selectedNode.Tag;
                     var properties = new BacnetPropertyReference[] { new BacnetPropertyReference((uint)BacnetPropertyIds.PROP_ALL, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL) };
                     IList<BacnetReadAccessResult> multiValueList;
                     try
@@ -1489,7 +1545,7 @@ namespace Yabe
 
                             lock (DevicesObjectsName)
                             {
-                                var t = new Tuple<string, BacnetObjectId>(adr.FullHashString(), objectId);
+                                var t = new Tuple<string, BacnetObject>(adr.FullHashString(), objectId);
                                 DevicesObjectsName.Remove(t);
                                 DevicesObjectsName.Add(t, value.ToString());
                             }
@@ -1515,7 +1571,7 @@ namespace Yabe
         private void m_AddressSpaceTree_AfterSelect(object sender, TreeViewEventArgs e)
         {
             UpdateGrid(e.Node);
-            BacnetClient cl; BacnetAddress ba; BacnetObjectId objId;
+            BacnetClient cl; BacnetAddress ba; BacnetObject objId;
 
             // Hide all elements in the toolstrip menu
             foreach (var its in m_AddressSpaceMenuStrip.Items)
@@ -1578,8 +1634,8 @@ namespace Yabe
                 //fetch object_id
                 if (m_AddressSpaceTree.SelectedNode == null) return;
                 else if (m_AddressSpaceTree.SelectedNode.Tag == null) return;
-                else if (!(m_AddressSpaceTree.SelectedNode.Tag is BacnetObjectId)) return;
-                var objectId = (BacnetObjectId)m_AddressSpaceTree.SelectedNode.Tag;
+                else if (!(m_AddressSpaceTree.SelectedNode.Tag is BacnetObject)) return;
+                var objectId = (BacnetObject)m_AddressSpaceTree.SelectedNode.Tag;
 
                 Utilities.CustomPropertyDescriptor c = null;
                 var gridItem = e.ChangedItem;
@@ -1675,12 +1731,12 @@ namespace Yabe
             }
         }
 
-        public bool GetObjectLink(out BacnetClient comm, out BacnetAddress adr, out BacnetObjectId objectId, BacnetObjectTypes expectedType)
+        public bool GetObjectLink(out BacnetClient comm, out BacnetAddress adr, out BacnetObject objectId, BacnetObjectTypes expectedType)
         {
 
             comm = null;
             adr = new BacnetAddress(BacnetAddressTypes.None, 0, null);
-            objectId = new BacnetObjectId();
+            objectId = new BacnetObject();
 
             try
             {
@@ -1704,8 +1760,8 @@ namespace Yabe
             //fetch object_id
             if (
                 m_AddressSpaceTree.SelectedNode == null ||
-                !(m_AddressSpaceTree.SelectedNode.Tag is BacnetObjectId) ||
-                ((BacnetObjectId)m_AddressSpaceTree.SelectedNode.Tag).type != expectedType)
+                !(m_AddressSpaceTree.SelectedNode.Tag is BacnetObject) ||
+                ((BacnetObject)m_AddressSpaceTree.SelectedNode.Tag).type != expectedType)
             {
                 var s = expectedType.ToString().Substring(7).ToLower();
                 if (expectedType != BacnetObjectTypes.MAX_BACNET_OBJECT_TYPE)
@@ -1717,7 +1773,7 @@ namespace Yabe
 
             if (m_AddressSpaceTree.SelectedNode != null)
             {
-                objectId = (BacnetObjectId)m_AddressSpaceTree.SelectedNode.Tag;
+                objectId = (BacnetObject)m_AddressSpaceTree.SelectedNode.Tag;
                 return true;
             }
 
@@ -1732,7 +1788,7 @@ namespace Yabe
                 //fetch end point
                 BacnetClient client = null;
                 BacnetAddress address;
-                BacnetObjectId objectId;
+                BacnetObject objectId;
                 if (GetObjectLink(out client, out address, out objectId, BacnetObjectTypes.OBJECT_FILE) == false) return;
 
                 //where to store file?
@@ -1811,7 +1867,7 @@ namespace Yabe
                 //fetch end point
                 BacnetClient client = null;
                 BacnetAddress address;
-                BacnetObjectId objectId;
+                BacnetObject objectId;
                 if (GetObjectLink(out client, out address, out objectId, BacnetObjectTypes.OBJECT_FILE) == false) return;
 
                 //which file to upload?
@@ -1872,7 +1928,7 @@ namespace Yabe
                 //fetch end point
                 BacnetClient client;
                 BacnetAddress address;
-                BacnetObjectId objectId;
+                BacnetObject objectId;
 
                 if (GetObjectLink(out client, out address, out objectId, BacnetObjectTypes.OBJECT_TRENDLOG) == false)
                     if (GetObjectLink(out client, out address, out objectId, BacnetObjectTypes.OBJECT_TREND_LOG_MULTIPLE) == false) return;
@@ -1893,7 +1949,7 @@ namespace Yabe
                 //fetch end point
                 BacnetClient client;
                 BacnetAddress address;
-                BacnetObjectId objectId;
+                BacnetObject objectId;
 
                 if (GetObjectLink(out client, out address, out objectId, BacnetObjectTypes.OBJECT_SCHEDULE) == false) return;
 
@@ -1911,7 +1967,7 @@ namespace Yabe
                 //fetch end point
                 BacnetClient client;
                 BacnetAddress address;
-                BacnetObjectId objectId;
+                BacnetObject objectId;
 
                 GetObjectLink(out client, out address, out objectId, BacnetObjectTypes.MAX_BACNET_OBJECT_TYPE);
 
@@ -1936,7 +1992,7 @@ namespace Yabe
                 //fetch end point
                 BacnetClient client;
                 BacnetAddress address;
-                BacnetObjectId objectId;
+                BacnetObject objectId;
 
                 if (GetObjectLink(out client, out address, out objectId, BacnetObjectTypes.OBJECT_CALENDAR) == false) return;
 
@@ -1954,7 +2010,7 @@ namespace Yabe
                 //fetch end point
                 BacnetClient client;
                 BacnetAddress address;
-                BacnetObjectId objectId;
+                BacnetObject objectId;
 
                 if (GetObjectLink(out client, out address, out objectId, BacnetObjectTypes.OBJECT_NOTIFICATION_CLASS) == false) return;
 
@@ -1975,7 +2031,7 @@ namespace Yabe
             e.Effect = DragDropEffects.Move;
         }
 
-        private string GetObjectName(BacnetClient comm, BacnetAddress adr, BacnetObjectId objectId)
+        private string GetObjectName(BacnetClient comm, BacnetAddress adr, BacnetObject objectId)
         {
             Cursor = Cursors.WaitCursor;
             try
@@ -2002,12 +2058,12 @@ namespace Yabe
         {
             public BacnetClient Client;
             public BacnetAddress Address;
-            public BacnetObjectId DeviceId, ObjectId;
+            public BacnetObject DeviceId, ObjectId;
             public string SubscriptionKey;
             public uint SubscriptionId;
             public bool IsActiveSubscription = true; // false if subscription is refused
 
-            public Subscription(BacnetClient comm, BacnetAddress adr, BacnetObjectId deviceId, BacnetObjectId objectId, string subKey, uint subscribeId)
+            public Subscription(BacnetClient comm, BacnetAddress adr, BacnetObject deviceId, BacnetObject objectId, string subKey, uint subscribeId)
             {
                 Client = comm;
                 Address = adr;
@@ -2018,7 +2074,7 @@ namespace Yabe
             }
         }
 
-        private bool CreateSubscription(BacnetClient comm, BacnetAddress adr, uint deviceId, BacnetObjectId objectId, bool withGraph)
+        private bool CreateSubscription(BacnetClient comm, BacnetAddress adr, uint deviceId, BacnetObject objectId, bool withGraph)
         {
             Cursor = Cursors.WaitCursor;
             try
@@ -2031,7 +2087,7 @@ namespace Yabe
 
                 _mNextSubscriptionId++;
                 var subKey = adr + ":" + deviceId + ":" + _mNextSubscriptionId;
-                var sub = new Subscription(comm, adr, new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, deviceId), objectId, subKey, _mNextSubscriptionId);
+                var sub = new Subscription(comm, adr, new BacnetObject(BacnetObjectTypes.OBJECT_DEVICE, deviceId), objectId, subKey, _mNextSubscriptionId);
 
                 //add to list
                 var itm = m_SubscriptionView.Items.Add(adr + " - " + deviceId);
@@ -2155,11 +2211,11 @@ namespace Yabe
                 //node[0]
 
                 // Nodes are in a non controllable order, so puts the objectIds in order
-                var bacnetObjects = new List<BacnetObjectId>();
+                var bacnetObjects = new List<BacnetObject>();
                 for (var i = 0; i < nodes.Count; i++)
                 {
-                    if ((nodes[i].Tag != null) && (nodes[i].Tag is BacnetObjectId))
-                        bacnetObjects.Add((BacnetObjectId)nodes[i].Tag);
+                    if ((nodes[i].Tag != null) && (nodes[i].Tag is BacnetObject))
+                        bacnetObjects.Add((BacnetObject)nodes[i].Tag);
                 }
 
                 bacnetObjects.Sort();
@@ -2359,12 +2415,12 @@ namespace Yabe
                 //get all objects
                 var storage = new DeviceStorage();
                 IList<BacnetValue> valueList;
-                client.ReadPropertyRequest(address, new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, deviceId), BacnetPropertyIds.PROP_OBJECT_LIST, out valueList);
-                var objectList = new LinkedList<BacnetObjectId>();
+                client.ReadPropertyRequest(address, new BacnetObject(BacnetObjectTypes.OBJECT_DEVICE, deviceId), BacnetPropertyIds.PROP_OBJECT_LIST, out valueList);
+                var objectList = new LinkedList<BacnetObject>();
                 foreach (var value in valueList)
                 {
-                    if (Enum.IsDefined(typeof(BacnetObjectTypes), ((BacnetObjectId)value.Value).Type))
-                        objectList.AddLast((BacnetObjectId)value.Value);
+                    if (Enum.IsDefined(typeof(BacnetObjectTypes), ((BacnetObject)value.Value).Type))
+                        objectList.AddLast((BacnetObject)value.Value);
                     else
                         removeObject = true;
                 }
@@ -2408,12 +2464,12 @@ namespace Yabe
         private uint FetchDeviceId(BacnetClient comm, BacnetAddress adr)
         {
             IList<BacnetValue> value;
-            if (comm.ReadPropertyRequest(adr, new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, System.IO.BACnet.Serialize.ASN1.BACNET_MAX_INSTANCE), BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, out value))
+            if (comm.ReadPropertyRequest(adr, new BacnetObject(BacnetObjectTypes.OBJECT_DEVICE, System.IO.BACnet.Serialize.ASN1.BACNET_MAX_INSTANCE), BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, out value))
             {
-                if (value != null && value.Count > 0 && value[0].Value is BacnetObjectId)
+                if (value != null && value.Count > 0 && value[0].Value is BacnetObject)
                 {
-                    var objectId = (BacnetObjectId)value[0].Value;
-                    return objectId.instance;
+                    var objectId = (BacnetObject)value[0].Value;
+                    return objectId.instanceId;
                 }
                 else
                     return 0xFFFFFFFF;
@@ -2440,7 +2496,7 @@ namespace Yabe
             //test object_id with the last selected node
             if (
                 m_AddressSpaceTree.SelectedNode == null ||
-                !(m_AddressSpaceTree.SelectedNode.Tag is BacnetObjectId))
+                !(m_AddressSpaceTree.SelectedNode.Tag is BacnetObject))
             {
                 MessageBox.Show(this, "The marked object is not an object", "Not an object", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 return;
@@ -2448,7 +2504,7 @@ namespace Yabe
             // advise all selected nodes, stop at the first COV reject (even if a period polling is done)
             foreach (TreeNode t in m_AddressSpaceTree.SelectedNodes)
             {
-                var objectId = (BacnetObjectId)t.Tag;
+                var objectId = (BacnetObject)t.Tag;
                 //create 
                 if (CreateSubscription(comm, adr, deviceId, objectId, false) == false)
                     return;
@@ -2684,14 +2740,14 @@ namespace Yabe
                 // Object list is already in the AddressSpaceTree, so no need to query it again
                 foreach (TreeNode t in m_AddressSpaceTree.Nodes)
                 {
-                    var bacnetObject = (BacnetObjectId)t.Tag;
+                    var bacnetObject = (BacnetObject)t.Tag;
                     var identifier = "";
                     var description = "";
                     var unitCode = ""; // Not actually in use
 
                     var propObjectNameOk = false;
                     lock (DevicesObjectsName)
-                        propObjectNameOk = DevicesObjectsName.TryGetValue(new Tuple<string, BacnetObjectId>(address.FullHashString(), bacnetObject), out identifier);
+                        propObjectNameOk = DevicesObjectsName.TryGetValue(new Tuple<string, BacnetObject>(address.FullHashString(), bacnetObject), out identifier);
 
                     if ((readPropertyMultipleSupported) && (!propObjectNameOk))
                     {
@@ -2732,13 +2788,13 @@ namespace Yabe
                         catch { }
                     }
 
-                    sw.WriteLine(bacnetObject + ";" + deviceId + ";" + identifier + ";" + ((int)bacnetObject.type) + ";" + bacnetObject.instance + ";" + description + ";;;;;;;;;" + unitCode);
+                    sw.WriteLine(bacnetObject + ";" + deviceId + ";" + identifier + ";" + ((int)bacnetObject.type) + ";" + bacnetObject.instanceId + ";" + description + ";;;;;;;;;" + unitCode);
 
                     // Update also the Dictionary of known object name and the TreeNode
                     if (t.ToolTipText == "")
                     {
                         lock (DevicesObjectsName)
-                            DevicesObjectsName.Add(new Tuple<string, BacnetObjectId>(address.FullHashString(), bacnetObject), identifier);
+                            DevicesObjectsName.Add(new Tuple<string, BacnetObject>(address.FullHashString(), bacnetObject), identifier);
 
                         ChangeTreeNodePropertyName(t, identifier);
 
@@ -2833,8 +2889,8 @@ namespace Yabe
             {
                 if (tn.ToolTipText == "")
                 {
-                    if (!bras.Exists(o => o.objectIdentifier.Equals((BacnetObjectId)tn.Tag)))
-                        bras.Add(new BacnetReadAccessSpecification((BacnetObjectId)tn.Tag, new BacnetPropertyReference[] { new BacnetPropertyReference((uint)BacnetPropertyIds.PROP_OBJECT_NAME, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL) }));
+                    if (!bras.Exists(o => o.objectIdentifier.Equals((BacnetObject)tn.Tag)))
+                        bras.Add(new BacnetReadAccessSpecification((BacnetObject)tn.Tag, new BacnetPropertyReference[] { new BacnetPropertyReference((uint)BacnetPropertyIds.PROP_OBJECT_NAME, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL) }));
                 }
                 if (tn.Nodes != null)
                     GetRequiredObjectName(tn.Nodes, bras);
@@ -2845,7 +2901,7 @@ namespace Yabe
         {
             foreach (TreeNode tn in tnc)
             {
-                var b = (BacnetObjectId)tn.Tag;
+                var b = (BacnetObject)tn.Tag;
 
                 try
                 {
@@ -2855,7 +2911,7 @@ namespace Yabe
                         ChangeTreeNodePropertyName(tn, r.values[0].value[0].ToString());
                         lock (DevicesObjectsName)
                         {
-                            var t = new Tuple<string, BacnetObjectId>(adr.FullHashString(), (BacnetObjectId)tn.Tag);
+                            var t = new Tuple<string, BacnetObject>(adr.FullHashString(), (BacnetObject)tn.Tag);
                             DevicesObjectsName.Remove(t); // sometimes the same object appears at several place (in Groups for instance).
                             DevicesObjectsName.Add(t, r.values[0].value[0].ToString());
                         }
@@ -2912,7 +2968,7 @@ namespace Yabe
                 if (tn.ToolTipText == "")
                 {
                     IList<BacnetValue> name;
-                    if (comm.ReadPropertyRequest(adr, (BacnetObjectId)tn.Tag, BacnetPropertyIds.PROP_OBJECT_NAME, out name) == true)
+                    if (comm.ReadPropertyRequest(adr, (BacnetObject)tn.Tag, BacnetPropertyIds.PROP_OBJECT_NAME, out name) == true)
                     {
                         if (asyncRequestId != _asyncRequestId) // Selected device is no more the good one
                         {
@@ -2928,7 +2984,7 @@ namespace Yabe
 
                             lock (DevicesObjectsName)
                             {
-                                var t = new Tuple<string, BacnetObjectId>(adr.FullHashString(), (BacnetObjectId)tn.Tag);
+                                var t = new Tuple<string, BacnetObject>(adr.FullHashString(), (BacnetObject)tn.Tag);
                                 DevicesObjectsName.Remove(t); // sometimes the same object appears at several place (in Groups for instance).
                                 DevicesObjectsName.Add(t, name[0].Value.ToString());
                             }
@@ -2961,7 +3017,7 @@ namespace Yabe
             {
                 Stream stream = File.Open(Properties.Settings.Default.ObjectNameFile, FileMode.Open);
                 var bf = new BinaryFormatter();
-                var d = (Dictionary<Tuple<string, BacnetObjectId>, string>)bf.Deserialize(stream);
+                var d = (Dictionary<Tuple<string, BacnetObject>, string>)bf.Deserialize(stream);
                 stream.Close();
 
                 if (d != null) DevicesObjectsName = d;
@@ -3022,7 +3078,7 @@ namespace Yabe
 
                 try
                 {
-                    client.CreateObjectRequest(address, new BacnetObjectId((BacnetObjectTypes)f.ObjectType.SelectedIndex, (uint)f.ObjectId.Value));
+                    client.CreateObjectRequest(address, new BacnetObject((BacnetObjectTypes)f.ObjectType.SelectedIndex, (uint)f.ObjectId.Value));
                     m_DeviceTree_AfterSelect(null, new TreeViewEventArgs(m_DeviceTree.SelectedNode));
                 }
                 catch (Exception ex)
@@ -3052,7 +3108,7 @@ namespace Yabe
         {
             var res = MessageBox.Show(this, "Clean all " + DevicesObjectsName.Count + " entries, really ?", "Name database suppression", MessageBoxButtons.OKCancel, MessageBoxIcon.Information);
             if (res == DialogResult.OK)
-                DevicesObjectsName = new Dictionary<Tuple<string, BacnetObjectId>, string>();
+                DevicesObjectsName = new Dictionary<Tuple<string, BacnetObject>, string>();
         }
 
         // Change the WritePriority Value
@@ -3076,7 +3132,8 @@ namespace Yabe
         #region "Alarm Logger"
 
         StreamWriter _alarmFileWriter;
-        object _lockAlarmFileWriter = new object();
+        readonly object _lockAlarmFileWriter = new object();
+        private bool _busy;
 
         private void EventAlarmLogToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -3109,6 +3166,8 @@ namespace Yabe
                 _alarmFileWriter = null;
             }
         }
+
+
         // Event/Alarm logging
         private void AddLogAlarmEvent(ListViewItem itm)
         {

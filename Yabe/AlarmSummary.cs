@@ -35,11 +35,11 @@ namespace Yabe
     {
         BacnetClient comm; BacnetAddress adr;
 
-        Dictionary<Tuple<String, BacnetObjectId>, String> DevicesObjectsName;
+        Dictionary<Tuple<String, BacnetObject>, String> DevicesObjectsName;
 
         IList<BacnetGetEventInformationData> Alarms=new List<BacnetGetEventInformationData>();
 
-        public AlarmSummary(ImageList img_List, BacnetClient comm, BacnetAddress adr, uint device_id, Dictionary<Tuple<String, BacnetObjectId>, String> DevicesObjectsName)
+        public AlarmSummary(ImageList img_List, BacnetClient comm, BacnetAddress adr, uint device_id, Dictionary<Tuple<String, BacnetObject>, String> DevicesObjectsName)
         {
             InitializeComponent();
             this.Text = "Active Alarms on Device Id " + device_id.ToString();
@@ -116,7 +116,7 @@ namespace Yabe
                     String nameStr = null;
 
                     lock (DevicesObjectsName)
-                        DevicesObjectsName.TryGetValue(new Tuple<String, BacnetObjectId>(adr.FullHashString(), alarm.objectIdentifier), out nameStr);
+                        DevicesObjectsName.TryGetValue(new Tuple<String, BacnetObject>(adr.FullHashString(), alarm.objectIdentifier), out nameStr);
 
                     if (nameStr == null)
                     {
@@ -128,7 +128,7 @@ namespace Yabe
                         {
                             nameStr = name[0].Value.ToString();
                             lock (DevicesObjectsName)
-                                DevicesObjectsName.Add(new Tuple<String, BacnetObjectId>(adr.FullHashString(), alarm.objectIdentifier), nameStr);
+                                DevicesObjectsName.Add(new Tuple<String, BacnetObject>(adr.FullHashString(), alarm.objectIdentifier), nameStr);
                         }
                     }
 

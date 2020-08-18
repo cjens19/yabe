@@ -33,9 +33,9 @@ namespace Yabe
 {
     public partial class NotificationEditor : Form
     {
-        BacnetClient comm; BacnetAddress adr; BacnetObjectId object_id;
+        BacnetClient comm; BacnetAddress adr; BacnetObject object_id;
 
-        public NotificationEditor(BacnetClient comm, BacnetAddress adr, BacnetObjectId object_id)
+        public NotificationEditor(BacnetClient comm, BacnetAddress adr, BacnetObject object_id)
         {            
             this.comm=comm;
             this.adr=adr;
@@ -119,7 +119,7 @@ namespace Yabe
                         if (r.adr!=null) // recipient is an IP address
                             newrp=new DeviceReportingRecipient(r.WeekOfDay,r.fromTime.Value,r.toTime.Value,r.adr,Convert.ToUInt16(r.ProcessId.Text),r.AckRequired.Checked,r.EventType);
                         else // recipient is a deviceId
-                            newrp = new DeviceReportingRecipient(r.WeekOfDay, r.fromTime.Value, r.toTime.Value,new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE,r.deviceid), Convert.ToUInt16(r.ProcessId.Text), r.AckRequired.Checked, r.EventType);
+                            newrp = new DeviceReportingRecipient(r.WeekOfDay, r.fromTime.Value, r.toTime.Value,new BacnetObject(BacnetObjectTypes.OBJECT_DEVICE,r.deviceid), Convert.ToUInt16(r.ProcessId.Text), r.AckRequired.Checked, r.EventType);
 
                         PropVal.Add(new BacnetValue(newrp));
                     }
@@ -222,7 +222,7 @@ namespace Yabe
             }
             else
             {
-                deviceid = recipient.Value.Id.instance;
+                deviceid = recipient.Value.Id.instanceId;
                 Device.Text = deviceid.ToString();
             }
 

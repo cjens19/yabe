@@ -35,14 +35,14 @@ namespace Yabe
 {
     public partial class CalendarEditor : Form
     {
-        BacnetClient comm; BacnetAddress adr; BacnetObjectId object_id;
+        BacnetClient comm; BacnetAddress adr; BacnetObject object_id;
         // dates in the bacnetobject
         BACnetCalendarEntry calendarEntries;
 
         DateTime CalendarStartRequested;
         bool InternalListeEntriesSelect=false;
 
-        public CalendarEditor(BacnetClient comm, BacnetAddress adr, BacnetObjectId object_id)
+        public CalendarEditor(BacnetClient comm, BacnetAddress adr, BacnetObject object_id)
         {
             InitializeComponent();
 

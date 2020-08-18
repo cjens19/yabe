@@ -38,11 +38,11 @@ namespace System.IO.BACnet.Storage
         [System.Xml.Serialization.XmlIgnore]
         public uint DeviceId { get; set; }
 
-        public delegate void ChangeOfValueHandler(DeviceStorage sender, BacnetObjectId object_id, BacnetPropertyIds property_id, uint array_index, IList<BacnetValue> value);
+        public delegate void ChangeOfValueHandler(DeviceStorage sender, BacnetObject object_id, BacnetPropertyIds property_id, uint array_index, IList<BacnetValue> value);
         public event ChangeOfValueHandler ChangeOfValue;
-        public delegate void ReadOverrideHandler(BacnetObjectId object_id, BacnetPropertyIds property_id, uint array_index, out IList<BacnetValue> value, out ErrorCodes status, out bool handled);
+        public delegate void ReadOverrideHandler(BacnetObject object_id, BacnetPropertyIds property_id, uint array_index, out IList<BacnetValue> value, out ErrorCodes status, out bool handled);
         public event ReadOverrideHandler ReadOverride;
-        public delegate void WriteOverrideHandler(BacnetObjectId object_id, BacnetPropertyIds property_id, uint array_index, IList<BacnetValue> value, out ErrorCodes status, out bool handled);
+        public delegate void WriteOverrideHandler(BacnetObject object_id, BacnetPropertyIds property_id, uint array_index, IList<BacnetValue> value, out ErrorCodes status, out bool handled);
         public event WriteOverrideHandler WriteOverride;
 
         public Object[] Objects { get; set; }
@@ -53,7 +53,7 @@ namespace System.IO.BACnet.Storage
             Objects = new Object[0];
         }
 
-        public Property FindProperty(BacnetObjectId object_id, BacnetPropertyIds property_id)
+        public Property FindProperty(BacnetObject object_id, BacnetPropertyIds property_id)
         {
             //liniear search
             var obj = FindObject(object_id);
@@ -87,12 +87,12 @@ namespace System.IO.BACnet.Storage
             return null;
         }
 
-        public Object FindObject(BacnetObjectId object_id)
+        public Object FindObject(BacnetObject object_id)
         {
             //liniear search
             foreach (var obj in Objects)
             {
-                if (obj.Type == object_id.type && obj.Instance == object_id.instance)
+                if (obj.Type == object_id.type && obj.Instance == object_id.instanceId)
                 {
                     return obj;
                 }
@@ -112,7 +112,7 @@ namespace System.IO.BACnet.Storage
             UnKnownProperty = -6,
         }
 
-        public int ReadPropertyValue(BacnetObjectId object_id, BacnetPropertyIds property_id)
+        public int ReadPropertyValue(BacnetObject object_id, BacnetPropertyIds property_id)
         {
             IList<BacnetValue> value;
             if (ReadProperty(object_id, property_id, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL, out value) == ErrorCodes.Good)
@@ -125,13 +125,13 @@ namespace System.IO.BACnet.Storage
                 return 0;
         }
 
-        public ErrorCodes ReadProperty(BacnetObjectId object_id, BacnetPropertyIds property_id, uint array_index, out IList<BacnetValue> value)
+        public ErrorCodes ReadProperty(BacnetObject object_id, BacnetPropertyIds property_id, uint array_index, out IList<BacnetValue> value)
         {
             value = new BacnetValue[0];
 
             //wildcard device_id
-            if (object_id.type == BacnetObjectTypes.OBJECT_DEVICE && object_id.instance >= System.IO.BACnet.Serialize.ASN1.BACNET_MAX_INSTANCE)
-                object_id.instance = DeviceId;
+            if (object_id.type == BacnetObjectTypes.OBJECT_DEVICE && object_id.instanceId >= System.IO.BACnet.Serialize.ASN1.BACNET_MAX_INSTANCE)
+                object_id.instanceId = DeviceId;
 
             //overrides
             bool handled;
@@ -167,7 +167,7 @@ namespace System.IO.BACnet.Storage
             return ErrorCodes.Good;
         }
 
-        public void ReadPropertyMultiple(BacnetObjectId object_id, ICollection<BacnetPropertyReference> properties, out IList<BacnetPropertyValue> values)
+        public void ReadPropertyMultiple(BacnetObject object_id, ICollection<BacnetPropertyReference> properties, out IList<BacnetPropertyValue> values)
         {
             var values_ret = new BacnetPropertyValue[properties.Count];
 
@@ -192,7 +192,7 @@ namespace System.IO.BACnet.Storage
             values = values_ret;
         }
 
-        public bool ReadPropertyAll(BacnetObjectId object_id, out IList<BacnetPropertyValue> values)
+        public bool ReadPropertyAll(BacnetObject object_id, out IList<BacnetPropertyValue> values)
         {
             values = null;
 
@@ -216,7 +216,7 @@ namespace System.IO.BACnet.Storage
             return true;
         }
 
-        public void WritePropertyValue(BacnetObjectId object_id, BacnetPropertyIds property_id, int value)
+        public void WritePropertyValue(BacnetObject object_id, BacnetPropertyIds property_id, int value)
         {
             IList<BacnetValue> read_values;
 
@@ -231,11 +231,11 @@ namespace System.IO.BACnet.Storage
             WriteProperty(object_id, property_id, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL, write_values);
         }
 
-        public ErrorCodes WriteProperty(BacnetObjectId object_id, BacnetPropertyIds property_id, uint array_index, IList<BacnetValue> value, bool add_if_not_exits = false)
+        public ErrorCodes WriteProperty(BacnetObject object_id, BacnetPropertyIds property_id, uint array_index, IList<BacnetValue> value, bool add_if_not_exits = false)
         {
             //wildcard device_id
-            if (object_id.type == BacnetObjectTypes.OBJECT_DEVICE && object_id.instance >= System.IO.BACnet.Serialize.ASN1.BACNET_MAX_INSTANCE)
-                object_id.instance = DeviceId;
+            if (object_id.type == BacnetObjectTypes.OBJECT_DEVICE && object_id.instanceId >= System.IO.BACnet.Serialize.ASN1.BACNET_MAX_INSTANCE)
+                object_id.instanceId = DeviceId;
 
             //overrides
             bool handled;
@@ -258,7 +258,7 @@ namespace System.IO.BACnet.Storage
                 {
                     obj = new Object();
                     obj.Type = object_id.type;
-                    obj.Instance = object_id.instance;
+                    obj.Instance = object_id.instanceId;
                     var arr = Objects;
                     Array.Resize<Object>(ref arr, arr.Length + 1);
                     arr[arr.Length - 1] = obj;
@@ -297,7 +297,7 @@ namespace System.IO.BACnet.Storage
         }
 
         // Write PROP_PRESENT_VALUE or PROP_RELINQUISH_DEFAULT in an object with a 16 level PROP_PRIORITY_ARRAY (BACNET_APPLICATION_TAG_NULL)
-        public ErrorCodes WriteCommandableProperty(BacnetObjectId object_id, BacnetPropertyIds property_id, BacnetValue value, uint priority)
+        public ErrorCodes WriteCommandableProperty(BacnetObject object_id, BacnetPropertyIds property_id, BacnetValue value, uint priority)
         {
 
             if (!(property_id == BacnetPropertyIds.PROP_PRESENT_VALUE))
@@ -386,7 +386,7 @@ namespace System.IO.BACnet.Storage
 
 
 
-        public ErrorCodes[] WritePropertyMultiple(BacnetObjectId object_id, ICollection<BacnetPropertyValue> values)
+        public ErrorCodes[] WritePropertyMultiple(BacnetObject object_id, ICollection<BacnetPropertyValue> values)
         {
             var ret = new ErrorCodes[values.Count];
 
@@ -456,7 +456,7 @@ namespace System.IO.BACnet.Storage
                         // change the value
                         obj.Instance = Deviceid.Value;
                         IList<BacnetValue> val = new BacnetValue[1] { new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID, "OBJECT_DEVICE:" + Deviceid.Value.ToString()) };
-                        ret.WriteProperty(new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, System.IO.BACnet.Serialize.ASN1.BACNET_MAX_INSTANCE), BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, 1, val, true);
+                        ret.WriteProperty(new BacnetObject(BacnetObjectTypes.OBJECT_DEVICE, System.IO.BACnet.Serialize.ASN1.BACNET_MAX_INSTANCE), BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, 1, val, true);
                     }
                 }
                 return ret;
@@ -556,7 +556,7 @@ namespace System.IO.BACnet.Storage
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME:
                     return new BacnetValue(type, DateTime.Parse(value));
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID:
-                    return new BacnetValue(type, BacnetObjectId.Parse(value));
+                    return new BacnetValue(type, BacnetObject.Parse(value));
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_READ_ACCESS_SPECIFICATION:
                     return new BacnetValue(type, BacnetReadAccessSpecification.Parse(value));
                 default:

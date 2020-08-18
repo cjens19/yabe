@@ -34,7 +34,7 @@ namespace Yabe
     {
         public bool Cancel { get; set; }
 
-        public static int ReadFileSize(BacnetClient comm, BacnetAddress adr, BacnetObjectId object_id)
+        public static int ReadFileSize(BacnetClient comm, BacnetAddress adr, BacnetObject object_id)
         {
             IList<BacnetValue> value;
             try
@@ -51,7 +51,7 @@ namespace Yabe
             }
         }
 
-        public void DownloadFileByBlocking(BacnetClient comm, BacnetAddress adr, BacnetObjectId object_id, string filename, Action<int> progress_action)
+        public void DownloadFileByBlocking(BacnetClient comm, BacnetAddress adr, BacnetObject object_id, string filename, Action<int> progress_action)
         {
             Cancel = false;
 
@@ -94,7 +94,7 @@ namespace Yabe
             }
         }
 
-        public void DownloadFileBySegmentation(BacnetClient comm, BacnetAddress adr, BacnetObjectId object_id, string filename, Action<int> progress_action)
+        public void DownloadFileBySegmentation(BacnetClient comm, BacnetAddress adr, BacnetObject object_id, string filename, Action<int> progress_action)
         {
             Cancel = false;
 
@@ -148,7 +148,7 @@ namespace Yabe
         /// This method is based upon increasing the MaxInfoFrames in the MSTP.
         /// In Bacnet/IP this will have bad effect due to the retries
         /// </summary>
-        public void DownloadFileByAsync(BacnetClient comm, BacnetAddress adr, BacnetObjectId object_id, string filename, Action<int> progress_action)
+        public void DownloadFileByAsync(BacnetClient comm, BacnetAddress adr, BacnetObject object_id, string filename, Action<int> progress_action)
         {
             Cancel = false;
 
@@ -223,7 +223,7 @@ namespace Yabe
             }
         }
 
-        public void UploadFileByBlocking(BacnetClient comm, BacnetAddress adr, BacnetObjectId object_id, string filename, Action<int> progress_action)
+        public void UploadFileByBlocking(BacnetClient comm, BacnetAddress adr, BacnetObject object_id, string filename, Action<int> progress_action)
         {
             Cancel = false;
 

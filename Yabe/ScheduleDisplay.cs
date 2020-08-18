@@ -35,14 +35,14 @@ namespace Yabe
 {
     public partial class ScheduleDisplay : Form
     { 
-        BacnetClient comm; BacnetAddress adr; BacnetObjectId schedule_id;
+        BacnetClient comm; BacnetAddress adr; BacnetObject schedule_id;
         // Default value type here if no values are already present
         // Could be choosen somewhere by the user
         BacnetApplicationTags ScheduleType = BacnetApplicationTags.BACNET_APPLICATION_TAG_DOUBLE;
 
         TreeNode mySelectedScheduleNode;
 
-        public ScheduleDisplay(ImageList img_List, BacnetClient comm, BacnetAddress adr, BacnetObjectId object_id)
+        public ScheduleDisplay(ImageList img_List, BacnetClient comm, BacnetAddress adr, BacnetObject object_id)
         {
             InitializeComponent();
             this.comm = comm;
@@ -144,7 +144,7 @@ namespace Yabe
             if (bopr.deviceIndentifier.type != BacnetObjectTypes.OBJECT_DEVICE)
                 newText = bopr.objectIdentifier.ToString().Substring(7) + " - " + ((BacnetPropertyIds)bopr.propertyIdentifier).ToString().Substring(5) + " on localDevice";
             else
-                newText = bopr.objectIdentifier.ToString().Substring(7) + " - " + ((BacnetPropertyIds)bopr.propertyIdentifier).ToString().Substring(5) + " on DEVICE:" + bopr.deviceIndentifier.instance.ToString();
+                newText = bopr.objectIdentifier.ToString().Substring(7) + " - " + ((BacnetPropertyIds)bopr.propertyIdentifier).ToString().Substring(5) + " on DEVICE:" + bopr.deviceIndentifier.instanceId.ToString();
 
             if (IdxRemove != -1)
                 listReferences.Items.RemoveAt(IdxRemove); // remove an old entry
@@ -497,7 +497,7 @@ namespace Yabe
             }
             else
             {
-                var newobj = new BacnetDeviceObjectPropertyReference(new BacnetObjectId(), BacnetPropertyIds.PROP_PRESENT_VALUE);
+                var newobj = new BacnetDeviceObjectPropertyReference(new BacnetObject(), BacnetPropertyIds.PROP_PRESENT_VALUE);
 
                 var form = new EditPropertyObjectReference(newobj);
                 form.ShowDialog();
@@ -659,10 +659,10 @@ namespace Yabe
                     break;
                 }
 
-            Reference_ObjId.Text = ObjRef.objectIdentifier.instance.ToString();
+            Reference_ObjId.Text = ObjRef.objectIdentifier.instanceId.ToString();
 
             if (ObjRef.deviceIndentifier.type == BacnetObjectTypes.OBJECT_DEVICE)
-                Reference_Device.Text = ObjRef.deviceIndentifier.instance.ToString();
+                Reference_Device.Text = ObjRef.deviceIndentifier.instanceId.ToString();
             if (ObjRef.arrayIndex != ASN1.BACNET_ARRAY_ALL)
                 Reference_Array.Text = ObjRef.arrayIndex.ToString();
         }
@@ -677,17 +677,17 @@ namespace Yabe
 
             try
             {
-                BacnetObjectId? device = null;
+                BacnetObject? device = null;
                 var ArrayIdx = ASN1.BACNET_ARRAY_ALL;
 
                 if (Reference_Device.Text != "")
-                    device = new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, Convert.ToUInt32(Reference_Device.Text));
+                    device = new BacnetObject(BacnetObjectTypes.OBJECT_DEVICE, Convert.ToUInt32(Reference_Device.Text));
                 if (Reference_Array.Text != "")
                     ArrayIdx = Convert.ToUInt16(Reference_Array.Text);
 
 
                 var newref = new BacnetDeviceObjectPropertyReference(
-                    new BacnetObjectId((BacnetObjectTypes)(Reference_ObjType.SelectedItem as Enumcombo).enumValue, Convert.ToUInt32(Reference_ObjId.Text) & 0x3FFFFF),
+                    new BacnetObject((BacnetObjectTypes)(Reference_ObjType.SelectedItem as Enumcombo).enumValue, Convert.ToUInt32(Reference_ObjId.Text) & 0x3FFFFF),
                     (BacnetPropertyIds)(Reference_Prop.SelectedItem as Enumcombo).enumValue, device, ArrayIdx);
 
                 if (!ObjRef.Equals(newref))

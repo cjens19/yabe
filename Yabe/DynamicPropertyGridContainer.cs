@@ -728,7 +728,7 @@ namespace Utilities
         public override bool CanConvertTo(ITypeDescriptorContext context,
                                   System.Type destinationType)
         {
-            if (destinationType == typeof(BacnetObjectId))
+            if (destinationType == typeof(BacnetObject))
                 return true;
             return base.CanConvertTo(context, destinationType);
         }
@@ -749,13 +749,13 @@ namespace Utilities
                                System.Type destinationType)
         {
             if (destinationType == typeof(System.String) &&
-                 value is BacnetObjectId)
+                 value is BacnetObject)
             {
 
-                var objId = (BacnetObjectId)value;
+                var objId = (BacnetObject)value;
 
                 return objId.type +
-                       ":" + objId.instance;
+                       ":" + objId.instanceId;
             }
             return base.ConvertTo(context, culture, value, destinationType);
         }
@@ -768,7 +768,7 @@ namespace Utilities
                 try
                 {
                     var s = (value as String).Split(':');
-                    return new BacnetObjectId((BacnetObjectTypes)Enum.Parse(typeof(BacnetObjectTypes), s[0]), Convert.ToUInt16(s[1]));
+                    return new BacnetObject((BacnetObjectTypes)Enum.Parse(typeof(BacnetObjectTypes), s[0]), Convert.ToUInt16(s[1]));
                 }
                 catch { return null; }
             }
@@ -826,13 +826,13 @@ namespace Utilities
                     var s = (value as String).Split(':');
                     if (s.Length == 4)
                         return new BacnetDeviceObjectPropertyReference(
-                                new BacnetObjectId((BacnetObjectTypes)Enum.Parse(typeof(BacnetObjectTypes), s[0]), Convert.ToUInt16(s[1])),
-                                (BacnetPropertyIds)Convert.ToUInt16(s[2]), new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, Convert.ToUInt32(s[3]))
+                                new BacnetObject((BacnetObjectTypes)Enum.Parse(typeof(BacnetObjectTypes), s[0]), Convert.ToUInt16(s[1])),
+                                (BacnetPropertyIds)Convert.ToUInt16(s[2]), new BacnetObject(BacnetObjectTypes.OBJECT_DEVICE, Convert.ToUInt32(s[3]))
 
                         );
                     if (s.Length == 3)
                         return new BacnetDeviceObjectPropertyReference(
-                                new BacnetObjectId((BacnetObjectTypes)Enum.Parse(typeof(BacnetObjectTypes), s[0]), Convert.ToUInt16(s[1])),
+                                new BacnetObject((BacnetObjectTypes)Enum.Parse(typeof(BacnetObjectTypes), s[0]), Convert.ToUInt16(s[1])),
                                 (BacnetPropertyIds)Convert.ToUInt16(s[2])
                         );
                     return null;
@@ -1245,7 +1245,7 @@ namespace Utilities
         static CustomPropertyDescriptor()
         {
             TypeDescriptor.AddAttributes(typeof(BacnetDeviceObjectPropertyReference), new TypeConverterAttribute(typeof(BacnetDeviceObjectPropertyReferenceConverter)));
-            TypeDescriptor.AddAttributes(typeof(BacnetObjectId), new TypeConverterAttribute(typeof(BacnetObjectIdentifierConverter)));
+            TypeDescriptor.AddAttributes(typeof(BacnetObject), new TypeConverterAttribute(typeof(BacnetObjectIdentifierConverter)));
             TypeDescriptor.AddAttributes(typeof(BacnetBitString), new TypeConverterAttribute(typeof(BacnetBitStringConverter)));
         }
 

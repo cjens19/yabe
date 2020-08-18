@@ -180,7 +180,7 @@
             this.m_RemoveToolButton});
             this.toolStrip1.Location = new System.Drawing.Point(0, 24);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(759, 25);
+            this.toolStrip1.Size = new System.Drawing.Size(936, 25);
             this.toolStrip1.TabIndex = 1;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -213,7 +213,7 @@
             this.helpToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(759, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(936, 24);
             this.menuStrip1.TabIndex = 2;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -538,8 +538,8 @@
             // 
             this.m_SplitContainerButtom.Panel2.Controls.Add(this.m_LogText);
             this.m_SplitContainerButtom.Panel2.Controls.Add(this.label4);
-            this.m_SplitContainerButtom.Size = new System.Drawing.Size(759, 554);
-            this.m_SplitContainerButtom.SplitterDistance = 412;
+            this.m_SplitContainerButtom.Size = new System.Drawing.Size(936, 684);
+            this.m_SplitContainerButtom.SplitterDistance = 508;
             this.m_SplitContainerButtom.TabIndex = 3;
             // 
             // m_SplitContainerLeft
@@ -555,8 +555,8 @@
             // m_SplitContainerLeft.Panel2
             // 
             this.m_SplitContainerLeft.Panel2.Controls.Add(this.m_SplitContainerRight);
-            this.m_SplitContainerLeft.Size = new System.Drawing.Size(759, 412);
-            this.m_SplitContainerLeft.SplitterDistance = 164;
+            this.m_SplitContainerLeft.Size = new System.Drawing.Size(936, 508);
+            this.m_SplitContainerLeft.SplitterDistance = 202;
             this.m_SplitContainerLeft.TabIndex = 0;
             // 
             // splitContainer4
@@ -575,8 +575,8 @@
             // 
             this.splitContainer4.Panel2.Controls.Add(this.m_AddressSpaceTree);
             this.splitContainer4.Panel2.Controls.Add(this.AddSpaceLabel);
-            this.splitContainer4.Size = new System.Drawing.Size(164, 412);
-            this.splitContainer4.SplitterDistance = 187;
+            this.splitContainer4.Size = new System.Drawing.Size(202, 508);
+            this.splitContainer4.SplitterDistance = 230;
             this.splitContainer4.TabIndex = 0;
             // 
             // m_DeviceTree
@@ -595,8 +595,10 @@
             this.m_DeviceTree.SelectedImageIndex = 0;
             this.m_DeviceTree.ShowNodeToolTips = true;
             this.m_DeviceTree.ShowRootLines = false;
-            this.m_DeviceTree.Size = new System.Drawing.Size(164, 174);
+            this.m_DeviceTree.Size = new System.Drawing.Size(202, 217);
             this.m_DeviceTree.TabIndex = 0;
+            this.m_DeviceTree.BeforeCheck += new System.Windows.Forms.TreeViewCancelEventHandler(this.m_DeviceTree_BeforeCheck);
+            this.m_DeviceTree.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.m_DeviceTree_AfterCheck);
             this.m_DeviceTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.m_DeviceTree_AfterSelect);
             this.m_DeviceTree.MouseDown += new System.Windows.Forms.MouseEventHandler(this.TreeView_MouseDown);
             // 
@@ -722,8 +724,9 @@
             this.m_AddressSpaceTree.SelectionBackColor = System.Drawing.SystemColors.Highlight;
             this.m_AddressSpaceTree.SelectionMode = CodersLab.Windows.Controls.TreeViewSelectionMode.MultiSelectSameLevel;
             this.m_AddressSpaceTree.ShowNodeToolTips = true;
-            this.m_AddressSpaceTree.Size = new System.Drawing.Size(164, 208);
+            this.m_AddressSpaceTree.Size = new System.Drawing.Size(202, 261);
             this.m_AddressSpaceTree.TabIndex = 0;
+            this.m_AddressSpaceTree.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.m_AddressSpaceTree_AfterCheck);
             this.m_AddressSpaceTree.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.m_AddressSpaceTree_ItemDrag);
             this.m_AddressSpaceTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.m_AddressSpaceTree_AfterSelect);
             this.m_AddressSpaceTree.MouseDown += new System.Windows.Forms.MouseEventHandler(this.TreeView_MouseDown);
@@ -830,8 +833,8 @@
             // 
             this.m_SplitContainerRight.Panel2.Controls.Add(this.m_DataGrid);
             this.m_SplitContainerRight.Panel2.Controls.Add(this.label1);
-            this.m_SplitContainerRight.Size = new System.Drawing.Size(591, 412);
-            this.m_SplitContainerRight.SplitterDistance = 396;
+            this.m_SplitContainerRight.Size = new System.Drawing.Size(730, 508);
+            this.m_SplitContainerRight.SplitterDistance = 489;
             this.m_SplitContainerRight.TabIndex = 0;
             // 
             // tabControl1
@@ -841,7 +844,7 @@
             this.tabControl1.Location = new System.Drawing.Point(0, 0);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(396, 412);
+            this.tabControl1.Size = new System.Drawing.Size(489, 508);
             this.tabControl1.TabIndex = 0;
             // 
             // tabPage1
@@ -850,7 +853,7 @@
             this.tabPage1.Location = new System.Drawing.Point(4, 22);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(388, 386);
+            this.tabPage1.Size = new System.Drawing.Size(481, 482);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Subscriptions, Periodic Polling, Events/Alarms";
             this.tabPage1.UseVisualStyleBackColor = true;
@@ -871,8 +874,8 @@
             // 
             this.splitCOV.Panel2.Controls.Add(this.labelDrop2);
             this.splitCOV.Panel2.Controls.Add(this.CovGraph);
-            this.splitCOV.Size = new System.Drawing.Size(382, 380);
-            this.splitCOV.SplitterDistance = 190;
+            this.splitCOV.Size = new System.Drawing.Size(475, 476);
+            this.splitCOV.SplitterDistance = 238;
             this.splitCOV.TabIndex = 1;
             // 
             // labelDrop1
@@ -902,7 +905,7 @@
             this.m_SubscriptionView.HideSelection = false;
             this.m_SubscriptionView.Location = new System.Drawing.Point(0, 0);
             this.m_SubscriptionView.Name = "m_SubscriptionView";
-            this.m_SubscriptionView.Size = new System.Drawing.Size(382, 190);
+            this.m_SubscriptionView.Size = new System.Drawing.Size(475, 238);
             this.m_SubscriptionView.TabIndex = 0;
             this.m_SubscriptionView.UseCompatibleStateImageBehavior = false;
             this.m_SubscriptionView.View = System.Windows.Forms.View.Details;
@@ -980,7 +983,7 @@
             this.CovGraph.ScrollMinX = 0D;
             this.CovGraph.ScrollMinY = 0D;
             this.CovGraph.ScrollMinY2 = 0D;
-            this.CovGraph.Size = new System.Drawing.Size(382, 186);
+            this.CovGraph.Size = new System.Drawing.Size(475, 234);
             this.CovGraph.TabIndex = 0;
             this.CovGraph.DragDrop += new System.Windows.Forms.DragEventHandler(this.m_SubscriptionView_DragDrop);
             this.CovGraph.DragEnter += new System.Windows.Forms.DragEventHandler(this.m_SubscriptionView_DragEnter);
@@ -991,7 +994,7 @@
             this.m_DataGrid.LineColor = System.Drawing.SystemColors.ControlDark;
             this.m_DataGrid.Location = new System.Drawing.Point(0, 13);
             this.m_DataGrid.Name = "m_DataGrid";
-            this.m_DataGrid.Size = new System.Drawing.Size(191, 399);
+            this.m_DataGrid.Size = new System.Drawing.Size(237, 495);
             this.m_DataGrid.TabIndex = 0;
             this.m_DataGrid.PropertyValueChanged += new System.Windows.Forms.PropertyValueChangedEventHandler(this.m_DataGrid_PropertyValueChanged);
             // 
@@ -1013,7 +1016,7 @@
             this.m_LogText.Multiline = true;
             this.m_LogText.Name = "m_LogText";
             this.m_LogText.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.m_LogText.Size = new System.Drawing.Size(759, 125);
+            this.m_LogText.Size = new System.Drawing.Size(936, 159);
             this.m_LogText.TabIndex = 0;
             // 
             // label4
@@ -1034,7 +1037,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(759, 603);
+            this.ClientSize = new System.Drawing.Size(936, 733);
             this.Controls.Add(this.m_SplitContainerButtom);
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.menuStrip1);
@@ -1042,7 +1045,6 @@
             this.KeyPreview = true;
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "YabeMainDialog";
-            this.Text = "Yet Another Bacnet Explorer - Yabe";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainDialog_FormClosing);
             this.Load += new System.EventHandler(this.MainDialog_Load);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.MainDialog_KeyDown);
