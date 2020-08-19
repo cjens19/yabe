@@ -32,6 +32,8 @@ namespace Yabe.Caching
 
         public bool ObjectCheckedState(uint deviceId, BacnetObject bacnetObject)
         {
+            if (bacnetObject.Type == BacnetObjectTypes.OBJECT_DEVICE) return true; //always want to have Device objects selected for export
+
             if (!_cache.ContainsKey(deviceId)) return false;
 
             if (_cache[deviceId].Any(p => p.Instance == bacnetObject.Instance && p.Type == bacnetObject.Type))

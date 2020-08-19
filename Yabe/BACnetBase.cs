@@ -1484,7 +1484,7 @@ namespace System.IO.BACnet
         public UInt32 instanceId;
         public BacnetObject(BacnetObjectTypes type, UInt32 instance, bool exportable = false)
         {
-            Exportable = exportable;
+            Exportable = type == BacnetObjectTypes.OBJECT_DEVICE ? true : exportable;
             this.type = type;
             this.instanceId = instance;
         }

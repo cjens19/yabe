@@ -1062,16 +1062,19 @@ namespace Yabe
         }
         private void m_DeviceTree_BeforeCheck(object sender, TreeViewCancelEventArgs e)
         {
-            _asyncRequestId++; // disabled a possible thread pool work (update) on the AddressSpaceTree
             if (!(e.Node.Tag is KeyValuePair<BacnetAddress, uint> entry))
-            {
                 e.Cancel = true;
-            }
+        }
+        private void m_AddressSpaceTree_BeforeCheck(object sender, TreeViewCancelEventArgs e)
+        {
+            if (!(e.Node.Tag is BacnetObject bacnetObject)) return;
+
+            if (bacnetObject.Type == BacnetObjectTypes.OBJECT_DEVICE && e.Node.Checked == true)
+                e.Cancel = true;
         }
 
         private void m_DeviceTree_AfterCheck(object sender, TreeViewEventArgs e)
         {
-            _asyncRequestId++; // disabled a possible thread pool work (update) on the AddressSpaceTree
             if (_busy) return;
             _busy = true;
             try
@@ -3194,6 +3197,7 @@ namespace Yabe
                 _alarmFileWriter = null;
             }
         }
+
 
 
         // Event/Alarm logging
