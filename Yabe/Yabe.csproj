@@ -104,6 +104,7 @@
     <Compile Include="BBMDEditor.Designer.cs">
       <DependentUpon>BBMDEditor.cs</DependentUpon>
     </Compile>
+    <Compile Include="Caching\DeviceCache.cs" />
     <Compile Include="CalendarEditor.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -312,6 +313,7 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

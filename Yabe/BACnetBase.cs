@@ -1482,7 +1482,7 @@ namespace System.IO.BACnet
         public bool Exportable { get; set; }
         public BacnetObjectTypes type;
         public UInt32 instanceId;
-        public BacnetObject(BacnetObjectTypes type, UInt32 instance, bool exportable = true)
+        public BacnetObject(BacnetObjectTypes type, UInt32 instance, bool exportable = false)
         {
             Exportable = exportable;
             this.type = type;

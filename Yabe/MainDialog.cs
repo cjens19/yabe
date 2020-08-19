@@ -41,6 +41,7 @@ using System.Media;
 using System.Linq;
 using System.Collections;
 using System.Reflection;
+using Yabe.Caching;
 using ZedGraph;
 
 namespace Yabe
@@ -64,6 +65,8 @@ namespace Yabe
         private List<BacnetObjectDescription> _objectsDescriptionExternal, _objectsDescriptionDefault;
 
         private YabeMainDialog _yabeFrm; // Ref to itself, already affected, useful for plugin development inside this code, before exporting it
+
+        private DeviceCache _cache; //Added in 1.2.0 to track state of checked/unchecked devices. used for selective exports
 
         private class BacnetDeviceLine
         {
@@ -103,6 +106,8 @@ namespace Yabe
             _pane.YAxis.MajorGrid.Color = Color.Gray;
             CovGraph.AxisChange();
             CovGraph.IsAutoScrollRange = true;
+
+            _cache = new DeviceCache();
 
             //load splitter setup
             try
@@ -603,7 +608,7 @@ namespace Yabe
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show(this, "Yet Another Bacnet Explorer - Igor\nVersion " + GetType().Assembly.GetName().Version + "\nBy Morten Kvistgaard - Copyright 2014-2017\nBy Frederic Chaxel - Copyright 2015-2018\nBy Chris Jenson - Copyright 2020\n" +
+            MessageBox.Show(this, "Yet Another Bacnet Explorer - Igor\nVersion " + GetType().Assembly.GetName().Version + "\nBy Morten Kvistgaard - Copyright 2014-2017\nBy Frederic Chaxel - Copyright 2015-2018\nBy Chris Jenson, Igor Inc. - Copyright 2020\n" +
                 "\nReferences:" +
                 "\nhttp://bacnet.sourceforge.net/" +
                 "\nhttp://www.unified-automation.com/products/development-tools/uaexpert.html" +
@@ -934,7 +939,7 @@ namespace Yabe
                 node = nodes.Add("PROPRIETARY:" + bacnetObject.Instance + " (" + name + ")");  // Proprietary Objects not in enum appears only with the number such as 584:0
 
             node.Tag = bacnetObject;
-            node.Checked = bacnetObject.Exportable;
+            node.Checked = _cache.ObjectCheckedState(GetCurrentDeviceId(), bacnetObject);
 
             //icon
             SetNodeIcon(bacnetObject.type, node);
@@ -1032,11 +1037,28 @@ namespace Yabe
 
             return sortedList;
         }
+
+        private uint GetCurrentDeviceId()
+        {
+            var deviceObject = m_AddressSpaceTree.Nodes.OfType<TreeNode>()
+                .First(node => node.Tag is BacnetObject tag && tag.Type == BacnetObjectTypes.OBJECT_DEVICE);
+
+            if (deviceObject.Tag is BacnetObject device)
+                return device.Instance;
+
+            return 0;
+        }
         private void m_AddressSpaceTree_AfterCheck(object sender, TreeViewEventArgs e)
         {
             if (!(e.Node.Tag is BacnetObject bacnetObject)) return;
 
             bacnetObject.Exportable = e.Node.Checked;
+
+            var currentId = GetCurrentDeviceId();
+
+            Debug.WriteLine($"Device {currentId} {bacnetObject.Type} is now exportable? {bacnetObject.Exportable}");
+
+            _cache.AddOrUpdate(currentId, bacnetObject);
         }
         private void m_DeviceTree_BeforeCheck(object sender, TreeViewCancelEventArgs e)
         {
@@ -1186,6 +1208,7 @@ namespace Yabe
 
                     var objectList = SortBacnetObjects(valueList);
                     AddSpaceLabel.Text = "Address Space : " + objectList.Count + " objects";
+
                     //add to tree
                     foreach (var bacnetObject in objectList)
                     {
@@ -1225,13 +1248,18 @@ namespace Yabe
                             }
                         }
 
+                        var obj = bacnetObject;
+                        obj.Exportable = _cache.ObjectCheckedState(deviceId, bacnetObject);
                         AddObjectEntry(client, bacnetAddress, null, bacnetObject, m_AddressSpaceTree.Nodes);//AddObjectEntry(comm, adr, null, bobj_id, e.Node.Nodes); 
+                        _cache.AddOrUpdate(deviceId, obj);
                     }
                 }
                 finally
                 {
                     Cursor = Cursors.Default;
                     m_DataGrid.SelectedObject = null;
+
+                    Debug.WriteLine($"--{_cache.NumberOfExportableObjects(deviceId)} Objects selected for export");
                 }
             }
         }
