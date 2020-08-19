@@ -41,6 +41,7 @@ using System.Media;
 using System.Linq;
 using System.Collections;
 using System.Reflection;
+using System.Text.Json;
 using Yabe.Caching;
 using ZedGraph;
 
@@ -85,7 +86,7 @@ namespace Yabe
         public YabeMainDialog()
         {
             _yabeFrm = this;
-            
+
             InitializeComponent();
             Text = $"Yet Another BACnet Explorer by Igor - {Assembly.GetExecutingAssembly().GetName().Version}";
             Trace.Listeners.Add(new MyTraceListener(this));
@@ -593,7 +594,7 @@ namespace Yabe
 
                 //add simply
                 var basicNode =
-                    new TreeNode("Device " + newEntry.Value + " - " + newEntry.Key.ToString(false)) {ImageIndex = 2};
+                    new TreeNode("Device " + newEntry.Value + " - " + newEntry.Key.ToString(false)) { ImageIndex = 2 };
                 basicNode.SelectedImageIndex = basicNode.ImageIndex;
                 basicNode.Tag = newEntry;
                 if (propObjectNameOk)
@@ -1142,7 +1143,7 @@ namespace Yabe
                     }
 
                     //display choice
-                    var dlg = new SourceAddressDialog {SourceAddress = address};
+                    var dlg = new SourceAddressDialog { SourceAddress = address };
                     if (dlg.ShowDialog(this) == DialogResult.Cancel) return;
                     ((BacnetMstpProtocolTransport)client.Transport).SourceAddress = dlg.SourceAddress;
                     Application.DoEvents();     //let the interface relax
@@ -1262,7 +1263,7 @@ namespace Yabe
                     Cursor = Cursors.Default;
                     m_DataGrid.SelectedObject = null;
 
-                    Debug.WriteLine($"--{_cache.NumberOfExportableObjects(deviceId)} Objects selected for export");
+                    Debug.WriteLine($"--{_cache.NumberOfExportableObjectsForDevice(deviceId)} Objects selected for export");
                 }
             }
         }
@@ -1348,7 +1349,7 @@ namespace Yabe
         {
             var newEntry = new BacnetPropertyValue
             {
-                property = new BacnetPropertyReference((uint) propertyId, arrayIndex)
+                property = new BacnetPropertyReference((uint)propertyId, arrayIndex)
             };
             IList<BacnetValue> value;
             try
@@ -1902,7 +1903,7 @@ namespace Yabe
                 if (GetObjectLink(out client, out address, out objectId, BacnetObjectTypes.OBJECT_FILE) == false) return;
 
                 //which file to upload?
-                var dlg = new OpenFileDialog {FileName = Properties.Settings.Default.GUI_LastFilename};
+                var dlg = new OpenFileDialog { FileName = Properties.Settings.Default.GUI_LastFilename };
                 if (dlg.ShowDialog(this) != DialogResult.OK) return;
                 var filename = dlg.FileName;
                 Properties.Settings.Default.GUI_LastFilename = filename;
@@ -2406,7 +2407,7 @@ namespace Yabe
 
         private void settingsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var dlg = new SettingsDialog {SelectedObject = Properties.Settings.Default};
+            var dlg = new SettingsDialog { SelectedObject = Properties.Settings.Default };
             dlg.ShowDialog(this);
         }
 
@@ -2433,7 +2434,7 @@ namespace Yabe
 
 
             //select file to store
-            var dlg = new SaveFileDialog {Filter = "xml|*.xml"};
+            var dlg = new SaveFileDialog { Filter = "xml|*.xml" };
             if (dlg.ShowDialog(this) != DialogResult.OK) return;
 
             Cursor = Cursors.WaitCursor;
@@ -2491,6 +2492,52 @@ namespace Yabe
                     Trace.TraceWarning("All proprietary Objects removed from export");
             }
         }
+        private void exportAllSelectedToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            //select file to store
+            var dlg = new SaveFileDialog { Filter = "json|*.json" };
+            if (dlg.ShowDialog(this) != DialogResult.OK) return;
+
+            Cursor = Cursors.WaitCursor;
+            Application.DoEvents();
+            
+            try
+            {
+                var sw = new StreamWriter(dlg.FileName);
+
+                var devices = new List<JsonDevice>();
+
+                foreach (var device in _cache.GetCache())
+                {
+                    var newDevice = new JsonDevice(device.Key);
+
+                    foreach (var deviceObject in device.Value.Where(p => p.Exportable))
+                    {
+                        newDevice.Objects.Add(new JsonDeviceObject(deviceObject));
+                    }
+
+                    devices.Add(newDevice);
+                }
+                
+                var json = JsonSerializer.Serialize(devices);
+
+                sw.Write(json);
+
+                sw.Close();
+
+                MessageBox.Show(this, "Done", "Export done", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(this, "Error during export: " + exception.Message, "Export Error", MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+            finally
+            {
+                Cursor = Cursors.Default;
+            }
+        }
+
 
         private uint FetchDeviceId(BacnetClient comm, BacnetAddress adr)
         {
@@ -2634,29 +2681,6 @@ namespace Yabe
             timeSynchronizeToolStripMenuItem_Click(this, null);
         }
 
-        // retrieve the BacnetClient, BacnetAddress, device id of the selected node
-        private void FetchEndPoint(out BacnetClient comm, out BacnetAddress adr, out uint deviceId)
-        {
-            comm = null; adr = null; deviceId = 0;
-            try
-            {
-                if (m_DeviceTree.SelectedNode == null) return;
-                else if (m_DeviceTree.SelectedNode.Tag == null) return;
-                else if (!(m_DeviceTree.SelectedNode.Tag is KeyValuePair<BacnetAddress, uint>)) return;
-                var entry = (KeyValuePair<BacnetAddress, uint>)m_DeviceTree.SelectedNode.Tag;
-                adr = entry.Key;
-                deviceId = entry.Value;
-                if (m_DeviceTree.SelectedNode.Parent.Tag is BacnetClient)
-                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
-                else
-                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Parent.Tag; // When device is under a Router
-            }
-            catch
-            {
-
-            }
-        }
-
         private void timeSynchronizeToolStripMenuItem_Click(object sender, EventArgs e)
         {
             //fetch end point
@@ -2742,7 +2766,7 @@ namespace Yabe
             }
 
             //select file to store
-            var dlg = new SaveFileDialog {Filter = "csv|*.csv"};
+            var dlg = new SaveFileDialog { Filter = "csv|*.csv" };
             if (dlg.ShowDialog(this) != DialogResult.OK) return;
 
             Cursor = Cursors.WaitCursor;
@@ -2767,6 +2791,7 @@ namespace Yabe
                                                                 };
 
                 var readPropertyMultipleSupported = true;
+
 
                 // Object list is already in the AddressSpaceTree, so no need to query it again
                 foreach (TreeNode t in m_AddressSpaceTree.Nodes)
@@ -2828,7 +2853,6 @@ namespace Yabe
                             DevicesObjectsName.Add(new Tuple<string, BacnetObject>(address.FullHashString(), bacnetObject), identifier);
 
                         ChangeTreeNodePropertyName(t, identifier);
-
                     }
                 }
 
@@ -2844,6 +2868,33 @@ namespace Yabe
             finally
             {
                 Cursor = Cursors.Default;
+            }
+        }
+
+        // retrieve the BacnetClient, BacnetAddress, device id of the selected node
+        private void FetchEndPoint(out BacnetClient comm, out BacnetAddress adr, out uint deviceId)
+        {
+            comm = null; adr = null; deviceId = 0;
+            try
+            {
+                if (m_DeviceTree.SelectedNode?.Tag == null) return;
+
+                if (!(m_DeviceTree.SelectedNode.Tag is KeyValuePair<BacnetAddress, uint>)) return;
+
+                var entry = (KeyValuePair<BacnetAddress, uint>)m_DeviceTree.SelectedNode.Tag;
+
+                adr = entry.Key;
+
+                deviceId = entry.Value;
+
+                if (m_DeviceTree.SelectedNode.Parent.Tag is BacnetClient)
+                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
+                else
+                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Parent.Tag; // When device is under a Router
+            }
+            catch
+            {
+
             }
         }
 
@@ -3181,7 +3232,7 @@ namespace Yabe
             }
 
             //which file to use ?
-            var dlg = new SaveFileDialog {DefaultExt = ".csv", Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*"};
+            var dlg = new SaveFileDialog { DefaultExt = ".csv", Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*" };
             if (dlg.ShowDialog(this) != DialogResult.OK) return;
             var filename = dlg.FileName;
 
@@ -3197,6 +3248,7 @@ namespace Yabe
                 _alarmFileWriter = null;
             }
         }
+
 
 
 

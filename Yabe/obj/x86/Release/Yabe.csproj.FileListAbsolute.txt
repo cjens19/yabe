@@ -1,0 +1,36 @@
+C:\sourcecode\igor-yabe\Yabe\bin\Release\README.txt
+C:\sourcecode\igor-yabe\Yabe\bin\Release\ReadSinglePropDescr.xml
+C:\sourcecode\igor-yabe\Yabe\bin\Release\Igor's Yabe.exe.config
+C:\sourcecode\igor-yabe\Yabe\bin\Release\Igor's Yabe.exe
+C:\sourcecode\igor-yabe\Yabe\bin\Release\Igor's Yabe.pdb
+C:\sourcecode\igor-yabe\Yabe\bin\Release\Microsoft.Bcl.AsyncInterfaces.dll
+C:\sourcecode\igor-yabe\Yabe\bin\Release\System.Buffers.dll
+C:\sourcecode\igor-yabe\Yabe\bin\Release\System.Memory.dll
+C:\sourcecode\igor-yabe\Yabe\bin\Release\System.Numerics.Vectors.dll
+C:\sourcecode\igor-yabe\Yabe\bin\Release\System.Runtime.CompilerServices.Unsafe.dll
+C:\sourcecode\igor-yabe\Yabe\bin\Release\System.Text.Encodings.Web.dll
+C:\sourcecode\igor-yabe\Yabe\bin\Release\System.Text.Json.dll
+C:\sourcecode\igor-yabe\Yabe\bin\Release\System.Threading.Tasks.Extensions.dll
+C:\sourcecode\igor-yabe\Yabe\bin\Release\System.ValueTuple.dll
+C:\sourcecode\igor-yabe\Yabe\obj\x86\Release\Yabe.csprojAssemblyReference.cache
+C:\sourcecode\igor-yabe\Yabe\obj\x86\Release\Igor's Yabe.exe.config
+C:\sourcecode\igor-yabe\Yabe\obj\x86\Release\Yabe.AlarmSummary.resources
+C:\sourcecode\igor-yabe\Yabe\obj\x86\Release\Yabe.BBMDEditor.resources
+C:\sourcecode\igor-yabe\Yabe\obj\x86\Release\Yabe.CalendarEditor.resources
+C:\sourcecode\igor-yabe\Yabe\obj\x86\Release\Yabe.CreateObject.resources
+C:\sourcecode\igor-yabe\Yabe\obj\x86\Release\Yabe.DeviceCommunicationControlDialog.resources
+C:\sourcecode\igor-yabe\Yabe\obj\x86\Release\Yabe.ForeignRegistry.resources
+C:\sourcecode\igor-yabe\Yabe\obj\x86\Release\Yabe.YabeMainDialog.resources
+C:\sourcecode\igor-yabe\Yabe\obj\x86\Release\Yabe.NotificationEditor.resources
+C:\sourcecode\igor-yabe\Yabe\obj\x86\Release\Yabe.ProgressDialog.resources
+C:\sourcecode\igor-yabe\Yabe\obj\x86\Release\Yabe.Properties.Resources.resources
+C:\sourcecode\igor-yabe\Yabe\obj\x86\Release\Yabe.ScheduleDisplay.resources
+C:\sourcecode\igor-yabe\Yabe\obj\x86\Release\Yabe.TrendLogDisplay.resources
+C:\sourcecode\igor-yabe\Yabe\obj\x86\Release\Yabe.SearchDialog.resources
+C:\sourcecode\igor-yabe\Yabe\obj\x86\Release\Yabe.SettingsDialog.resources
+C:\sourcecode\igor-yabe\Yabe\obj\x86\Release\Yabe.SourceAddressDialog.resources
+C:\sourcecode\igor-yabe\Yabe\obj\x86\Release\Yabe.csproj.GenerateResource.cache
+C:\sourcecode\igor-yabe\Yabe\obj\x86\Release\Yabe.csproj.CoreCompileInputs.cache
+C:\sourcecode\igor-yabe\Yabe\obj\x86\Release\Yabe.csproj.CopyComplete
+C:\sourcecode\igor-yabe\Yabe\obj\x86\Release\Igor's Yabe.exe
+C:\sourcecode\igor-yabe\Yabe\obj\x86\Release\Igor's Yabe.pdb

@@ -1,9 +1,5 @@
 C:\sourcecode\igor-yabe\Yabe\bin\Debug\README.txt
 C:\sourcecode\igor-yabe\Yabe\bin\Debug\ReadSinglePropDescr.xml
-C:\sourcecode\igor-yabe\Yabe\bin\Debug\Yabe.exe.config
-C:\sourcecode\igor-yabe\Yabe\bin\Debug\Yabe.exe
-C:\sourcecode\igor-yabe\Yabe\bin\Debug\Yabe.pdb
-C:\sourcecode\igor-yabe\Yabe\obj\x86\Debug\Yabe.csprojAssemblyReference.cache
 C:\sourcecode\igor-yabe\Yabe\obj\x86\Debug\Yabe.AlarmSummary.resources
 C:\sourcecode\igor-yabe\Yabe\obj\x86\Debug\Yabe.BBMDEditor.resources
 C:\sourcecode\igor-yabe\Yabe\obj\x86\Debug\Yabe.CalendarEditor.resources
@@ -21,5 +17,19 @@ C:\sourcecode\igor-yabe\Yabe\obj\x86\Debug\Yabe.SettingsDialog.resources
 C:\sourcecode\igor-yabe\Yabe\obj\x86\Debug\Yabe.SourceAddressDialog.resources
 C:\sourcecode\igor-yabe\Yabe\obj\x86\Debug\Yabe.csproj.GenerateResource.cache
 C:\sourcecode\igor-yabe\Yabe\obj\x86\Debug\Yabe.csproj.CoreCompileInputs.cache
-C:\sourcecode\igor-yabe\Yabe\obj\x86\Debug\Yabe.exe
-C:\sourcecode\igor-yabe\Yabe\obj\x86\Debug\Yabe.pdb
+C:\sourcecode\igor-yabe\Yabe\bin\Debug\Microsoft.Bcl.AsyncInterfaces.dll
+C:\sourcecode\igor-yabe\Yabe\bin\Debug\System.Buffers.dll
+C:\sourcecode\igor-yabe\Yabe\bin\Debug\System.Memory.dll
+C:\sourcecode\igor-yabe\Yabe\bin\Debug\System.Numerics.Vectors.dll
+C:\sourcecode\igor-yabe\Yabe\bin\Debug\System.Runtime.CompilerServices.Unsafe.dll
+C:\sourcecode\igor-yabe\Yabe\bin\Debug\System.Text.Encodings.Web.dll
+C:\sourcecode\igor-yabe\Yabe\bin\Debug\System.Text.Json.dll
+C:\sourcecode\igor-yabe\Yabe\bin\Debug\System.Threading.Tasks.Extensions.dll
+C:\sourcecode\igor-yabe\Yabe\bin\Debug\System.ValueTuple.dll
+C:\sourcecode\igor-yabe\Yabe\obj\x86\Debug\Yabe.csproj.CopyComplete
+C:\sourcecode\igor-yabe\Yabe\bin\Debug\Igor's Yabe.exe.config
+C:\sourcecode\igor-yabe\Yabe\bin\Debug\Igor's Yabe.exe
+C:\sourcecode\igor-yabe\Yabe\bin\Debug\Igor's Yabe.pdb
+C:\sourcecode\igor-yabe\Yabe\obj\x86\Debug\Igor's Yabe.exe.config
+C:\sourcecode\igor-yabe\Yabe\obj\x86\Debug\Igor's Yabe.exe
+C:\sourcecode\igor-yabe\Yabe\obj\x86\Debug\Igor's Yabe.pdb

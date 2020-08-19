@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO.BACnet;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace Yabe.Caching
 {
@@ -14,21 +15,20 @@ namespace Yabe.Caching
             _cache = new ConcurrentDictionary<uint, IList<BacnetObject>>();
         }
 
+        public ConcurrentDictionary<uint, IList<BacnetObject>> GetCache()
+        {
+            return _cache;
+        }
+
         public IList<BacnetObject> GetObjects(uint deviceId)
         {
             return _cache[deviceId];
         }
 
-        //public (bool exists, bool checkedState) Exists(uint deviceId, BacnetObject bacnetObject)
-        //{
-        //    if (_cache.ContainsKey(deviceId) && _cache[deviceId].Any(p => p.Instance == bacnetObject.Instance && p.Type == bacnetObject.Type))
-        //    {
-        //        return (true,
-        //            _cache[deviceId].Single(p => p.Instance == bacnetObject.Instance && p.Type == bacnetObject.Type)
-        //                .Exportable);
-        //    }
-            
-        //}
+        public IList<uint> GetCachedDeviceIds()
+        {
+            return new List<uint>(_cache.Keys);
+        }
 
         public bool ObjectCheckedState(uint deviceId, BacnetObject bacnetObject)
         {
@@ -45,9 +45,14 @@ namespace Yabe.Caching
             return false;
         }
 
-        public int NumberOfExportableObjects(uint deviceId)
+        public int NumberOfExportableObjectsForDevice(uint deviceId)
         {
             return _cache[deviceId].Count(p => p.Exportable);
+        }
+
+        public int NumberOfExportableObjects()
+        {
+            return _cache.Sum(entry => entry.Value.Count(p => p.Exportable));
         }
 
         public void AddOrUpdate(uint deviceId, BacnetObject bacnetObject)
@@ -94,6 +99,35 @@ namespace Yabe.Caching
         private void RemoveFromCache(uint deviceId, BacnetObject bacnetObject)
         {
             _cache[deviceId].Remove(bacnetObject);
+        }
+    }
+
+    public class JsonDevice
+    {
+        [JsonPropertyName("deviceId")]
+        public string DeviceId { get; set; }
+
+        [JsonPropertyName("objects")]
+        public IList<JsonDeviceObject> Objects { get; set; }
+
+        public JsonDevice(uint deviceId)
+        {
+            DeviceId = deviceId.ToString();
+            Objects = new List<JsonDeviceObject>();
+        }
+    }
+
+    public class JsonDeviceObject
+    {
+        [JsonPropertyName("type")]
+        public string Type { get; set; }
+        [JsonPropertyName("instance")]
+        public uint Instance { get; set; }
+
+        public JsonDeviceObject(BacnetObject bacnetObject)
+        {
+            Type = bacnetObject.Type.ToString();
+            Instance = bacnetObject.Instance;
         }
     }
 }

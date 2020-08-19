@@ -1,0 +1,58 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\sourcecode\\igor-yabe\\Yabe\\Yabe.csproj": {}
+  },
+  "projects": {
+    "C:\\sourcecode\\igor-yabe\\Yabe\\Yabe.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\sourcecode\\igor-yabe\\Yabe\\Yabe.csproj",
+        "projectName": "Yabe",
+        "projectPath": "C:\\sourcecode\\igor-yabe\\Yabe\\Yabe.csproj",
+        "packagesPath": "C:\\Users\\Chris\\.nuget\\packages\\",
+        "outputPath": "C:\\sourcecode\\igor-yabe\\Yabe\\obj\\",
+        "projectStyle": "PackageReference",
+        "skipContentFileWrite": true,
+        "configFilePaths": [
+          "C:\\Users\\Chris\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net48"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {},
+          "https://www.myget.org/F/igor/auth/d4df08ad-9b7b-4dc1-9791-ba8f999ee4a1/api/v3/index.json": {}
+        },
+        "frameworks": {
+          "net48": {
+            "projectReferences": {}
+          }
+        }
+      },
+      "frameworks": {
+        "net48": {
+          "dependencies": {
+            "System.Text.Json": {
+              "target": "Package",
+              "version": "[4.7.2, )"
+            }
+          }
+        }
+      },
+      "runtimes": {
+        "win": {
+          "#import": []
+        },
+        "win-x64": {
+          "#import": []
+        },
+        "win-x86": {
+          "#import": []
+        }
+      }
+    }
+  }
+}
