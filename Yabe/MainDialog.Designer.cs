@@ -53,6 +53,7 @@
             this.editBBMDTablesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportDeviceDBToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.exportDeviceEDEFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportAllSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.timeSynchronizeToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.communicationControlToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.alarmSummaryToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
@@ -87,6 +88,7 @@
             this.readPropertiesNameToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.createObjectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.label2 = new System.Windows.Forms.Label();
+            this.m_AddressSpaceTree = new CodersLab.Windows.Controls.TreeView();
             this.m_AddressSpaceMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.subscribeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.downloadFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -120,8 +122,6 @@
             this.m_LogText = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.m_subscriptionRenewTimer = new System.Windows.Forms.Timer(this.components);
-            this.exportAllSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.m_AddressSpaceTree = new CodersLab.Windows.Controls.TreeView();
             m_ImageList = new System.Windows.Forms.ImageList(this.components);
             this.toolStrip1.SuspendLayout();
             this.menuStrip1.SuspendLayout();
@@ -380,6 +380,14 @@
             this.exportDeviceEDEFileToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
             this.exportDeviceEDEFileToolStripMenuItem.Text = "Export Device EDE File";
             this.exportDeviceEDEFileToolStripMenuItem.Click += new System.EventHandler(this.exportDeviceEDEFileToolStripMenuItem_Click);
+            // 
+            // exportAllSelectedToolStripMenuItem
+            // 
+            this.exportAllSelectedToolStripMenuItem.Image = global::Yabe.Properties.Resources.database_go;
+            this.exportAllSelectedToolStripMenuItem.Name = "exportAllSelectedToolStripMenuItem";
+            this.exportAllSelectedToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
+            this.exportAllSelectedToolStripMenuItem.Text = "Export checked objects to JSON";
+            this.exportAllSelectedToolStripMenuItem.Click += new System.EventHandler(this.exportAllSelectedToolStripMenuItem_Click);
             // 
             // timeSynchronizeToolStripMenuItem1
             // 
@@ -712,6 +720,27 @@
             this.label2.TabIndex = 2;
             this.label2.Text = "Devices";
             // 
+            // m_AddressSpaceTree
+            // 
+            this.m_AddressSpaceTree.CheckBoxes = true;
+            this.m_AddressSpaceTree.ContextMenuStrip = this.m_AddressSpaceMenuStrip;
+            this.m_AddressSpaceTree.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.m_AddressSpaceTree.ImageIndex = 0;
+            this.m_AddressSpaceTree.ImageList = m_ImageList;
+            this.m_AddressSpaceTree.Location = new System.Drawing.Point(0, 13);
+            this.m_AddressSpaceTree.Name = "m_AddressSpaceTree";
+            this.m_AddressSpaceTree.SelectedImageIndex = 0;
+            this.m_AddressSpaceTree.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            this.m_AddressSpaceTree.SelectionMode = CodersLab.Windows.Controls.TreeViewSelectionMode.SingleSelect;
+            this.m_AddressSpaceTree.ShowNodeToolTips = true;
+            this.m_AddressSpaceTree.Size = new System.Drawing.Size(202, 261);
+            this.m_AddressSpaceTree.TabIndex = 0;
+            this.m_AddressSpaceTree.BeforeCheck += new System.Windows.Forms.TreeViewCancelEventHandler(this.m_AddressSpaceTree_BeforeCheck);
+            this.m_AddressSpaceTree.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.m_AddressSpaceTree_AfterCheck);
+            this.m_AddressSpaceTree.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.m_AddressSpaceTree_ItemDrag);
+            this.m_AddressSpaceTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.m_AddressSpaceTree_AfterSelect);
+            this.m_AddressSpaceTree.MouseDown += new System.Windows.Forms.MouseEventHandler(this.TreeView_MouseDown);
+            // 
             // m_AddressSpaceMenuStrip
             // 
             this.m_AddressSpaceMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -1013,35 +1042,6 @@
             // m_subscriptionRenewTimer
             // 
             this.m_subscriptionRenewTimer.Tick += new System.EventHandler(this.m_subscriptionRenewTimer_Tick);
-            // 
-            // exportAllSelectedToolStripMenuItem
-            // 
-            this.exportAllSelectedToolStripMenuItem.Image = global::Yabe.Properties.Resources.database_go;
-            this.exportAllSelectedToolStripMenuItem.Name = "exportAllSelectedToolStripMenuItem";
-            this.exportAllSelectedToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
-            this.exportAllSelectedToolStripMenuItem.Text = "Export checked objects to JSON";
-            this.exportAllSelectedToolStripMenuItem.Click += new System.EventHandler(this.exportAllSelectedToolStripMenuItem_Click);
-            // 
-            // m_AddressSpaceTree
-            // 
-            this.m_AddressSpaceTree.CheckBoxes = true;
-            this.m_AddressSpaceTree.ContextMenuStrip = this.m_AddressSpaceMenuStrip;
-            this.m_AddressSpaceTree.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.m_AddressSpaceTree.ImageIndex = 0;
-            this.m_AddressSpaceTree.ImageList = m_ImageList;
-            this.m_AddressSpaceTree.Location = new System.Drawing.Point(0, 13);
-            this.m_AddressSpaceTree.Name = "m_AddressSpaceTree";
-            this.m_AddressSpaceTree.SelectedImageIndex = 0;
-            this.m_AddressSpaceTree.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            this.m_AddressSpaceTree.SelectionMode = CodersLab.Windows.Controls.TreeViewSelectionMode.SingleSelect;
-            this.m_AddressSpaceTree.ShowNodeToolTips = true;
-            this.m_AddressSpaceTree.Size = new System.Drawing.Size(202, 261);
-            this.m_AddressSpaceTree.TabIndex = 0;
-            this.m_AddressSpaceTree.BeforeCheck += new System.Windows.Forms.TreeViewCancelEventHandler(this.m_AddressSpaceTree_BeforeCheck);
-            this.m_AddressSpaceTree.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.m_AddressSpaceTree_AfterCheck);
-            this.m_AddressSpaceTree.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.m_AddressSpaceTree_ItemDrag);
-            this.m_AddressSpaceTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.m_AddressSpaceTree_AfterSelect);
-            this.m_AddressSpaceTree.MouseDown += new System.Windows.Forms.MouseEventHandler(this.TreeView_MouseDown);
             // 
             // YabeMainDialog
             // 

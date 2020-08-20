@@ -120,13 +120,13 @@ namespace Yabe.Caching
     public class JsonDeviceObject
     {
         [JsonPropertyName("type")]
-        public string Type { get; set; }
+        public BacnetObjectTypes Type { get; set; }
         [JsonPropertyName("instance")]
         public uint Instance { get; set; }
 
         public JsonDeviceObject(BacnetObject bacnetObject)
         {
-            Type = bacnetObject.Type.ToString();
+            Type = bacnetObject.Type;
             Instance = bacnetObject.Instance;
         }
     }
