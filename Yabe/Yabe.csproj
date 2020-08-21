@@ -104,6 +104,7 @@
     <Compile Include="BBMDEditor.Designer.cs">
       <DependentUpon>BBMDEditor.cs</DependentUpon>
     </Compile>
+    <Compile Include="Caching\BacnetObjectExtensions.cs" />
     <Compile Include="Caching\DeviceCache.cs" />
     <Compile Include="CalendarEditor.cs">
       <SubType>Form</SubType>

@@ -1480,8 +1480,11 @@ namespace System.IO.BACnet
     public struct BacnetObject : IComparable<BacnetObject>
     {
         public bool Exportable { get; set; }
+
         public BacnetObjectTypes type;
+
         public UInt32 instanceId;
+
         public BacnetObject(BacnetObjectTypes type, UInt32 instance, bool exportable = false)
         {
             Exportable = type == BacnetObjectTypes.OBJECT_DEVICE ? true : exportable;

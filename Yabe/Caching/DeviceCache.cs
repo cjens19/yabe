@@ -8,19 +8,19 @@ namespace Yabe.Caching
 {
     public class DeviceCache
     {
-        private readonly ConcurrentDictionary<uint, IList<BacnetObject>> _cache;
+        private readonly ConcurrentDictionary<uint, IList<CachedObject>> _cache;
 
         public DeviceCache()
         {
-            _cache = new ConcurrentDictionary<uint, IList<BacnetObject>>();
+            _cache = new ConcurrentDictionary<uint, IList<CachedObject>>();
         }
 
-        public ConcurrentDictionary<uint, IList<BacnetObject>> GetCache()
+        public ConcurrentDictionary<uint, IList<CachedObject>> GetCache()
         {
             return _cache;
         }
 
-        public IList<BacnetObject> GetObjects(uint deviceId)
+        public IList<CachedObject> GetObjects(uint deviceId)
         {
             return _cache[deviceId];
         }
@@ -30,15 +30,15 @@ namespace Yabe.Caching
             return new List<uint>(_cache.Keys);
         }
 
-        public bool ObjectCheckedState(uint deviceId, BacnetObject bacnetObject)
+        public bool ObjectCheckedState(uint deviceId, CachedObject cachedObject)
         {
-            if (bacnetObject.Type == BacnetObjectTypes.OBJECT_DEVICE) return true; //always want to have Device objects selected for export
+            if (cachedObject.Type == BacnetObjectTypes.OBJECT_DEVICE) return true; //always want to have Device objects selected for export
 
             if (!_cache.ContainsKey(deviceId)) return false;
 
-            if (_cache[deviceId].Any(p => p.Instance == bacnetObject.Instance && p.Type == bacnetObject.Type))
+            if (_cache[deviceId].Any(p => p.Instance == cachedObject.Instance && p.Type == cachedObject.Type))
             {
-                return _cache[deviceId].SingleOrDefault(p => p.Instance == bacnetObject.Instance && p.Type == bacnetObject.Type)
+                return _cache[deviceId].Single(p => p.Instance == cachedObject.Instance && p.Type == cachedObject.Type)
                     .Exportable;
             }
 
@@ -55,51 +55,89 @@ namespace Yabe.Caching
             return _cache.Sum(entry => entry.Value.Count(p => p.Exportable));
         }
 
-        public void AddOrUpdate(uint deviceId, BacnetObject bacnetObject)
+        public void UpdateCheckedState(uint deviceId, BacnetObjectTypes type, uint instance, bool state)
+        {
+            if (!_cache.ContainsKey(deviceId)) return;
+            var cachedObject = _cache[deviceId].SingleOrDefault(p => p.Type == type && p.Instance == instance);
+
+            if (cachedObject != null)
+                cachedObject.Exportable = state;
+        }
+
+        public void AddOrUpdate(uint deviceId, CachedObject cachedObject)
         {
             if (_cache.ContainsKey(deviceId))
             {
-                UpdateCache(deviceId, bacnetObject);
+                UpdateCache(deviceId, cachedObject);
             }
             else
             {
-                CreateCachedDevice(deviceId, bacnetObject);
+                CreateCachedDevice(deviceId, cachedObject);
             }
         }
 
-        private void CreateCachedDevice(uint deviceId, BacnetObject bacnetObject)
+        private void CreateCachedDevice(uint deviceId, CachedObject cachedObject)
         {
-            _cache[deviceId] = new List<BacnetObject>
+            _cache[deviceId] = new List<CachedObject>
             {
-                bacnetObject
+                cachedObject
             };
         }
 
-        private void AddToCache(uint deviceId, BacnetObject bacnetObject)
+        private void AddToCache(uint deviceId, CachedObject cachedObject)
         {
-            _cache[deviceId].Add(bacnetObject);
+            _cache[deviceId].Add(cachedObject);
         }
 
-        private void UpdateCache(uint deviceId, BacnetObject bacnetObject)
+        private void UpdateCache(uint deviceId, CachedObject cachedObject)
         {
             var objects = _cache[deviceId];
 
-            var exists = objects.Any(p => p.Instance == bacnetObject.Instance && p.Type == bacnetObject.Type);
-
+            var exists = objects.Any(p => p.Instance == cachedObject.Instance && p.Type == cachedObject.Type);
+            
             if (exists)
             {
-                var toRemove = objects.Single(p => p.Instance == bacnetObject.Instance && p.Type == bacnetObject.Type);
+                var existingObject = objects.Single(p => p.Instance == cachedObject.Instance && p.Type == cachedObject.Type);
 
-                RemoveFromCache(deviceId, toRemove);
+                UpdateIfChanged(existingObject, cachedObject);
             }
-
-            AddToCache(deviceId, bacnetObject);
+            else
+            {
+                AddToCache(deviceId, cachedObject);
+            }
         }
 
-        private void RemoveFromCache(uint deviceId, BacnetObject bacnetObject)
+        private void UpdateIfChanged(CachedObject existingObject, CachedObject cachedObject)
         {
-            _cache[deviceId].Remove(bacnetObject);
+            existingObject.Type = cachedObject.Type;
+            existingObject.Exportable = cachedObject.Exportable;
+            existingObject.Name = cachedObject.Name;
+            existingObject.Instance = cachedObject.Instance;
         }
+
+        //private void RemoveFromCache(uint deviceId, CachedObject cachedObject)
+        //{
+        //    _cache[deviceId].Remove(cachedObject);
+        //}
+    }
+
+    public class CachedDevice
+    {
+        public uint DeviceId { get; set; }
+        public string Name { get; set; }
+        public IList<CachedObject> CachedObjects { get; set; }
+
+        public CachedDevice()
+        {
+            CachedObjects = new List<CachedObject>();
+        }
+    }
+    public class CachedObject
+    {
+        public string Name { get; set; }
+        public uint Instance { get; set; }
+        public BacnetObjectTypes Type { get; set; }
+        public bool Exportable { get; set; }
     }
 
     public class JsonDevice
@@ -123,11 +161,14 @@ namespace Yabe.Caching
         public BacnetObjectTypes Type { get; set; }
         [JsonPropertyName("instance")]
         public uint Instance { get; set; }
+        [JsonPropertyName("name")]
+        public string Name { get; set; }
 
-        public JsonDeviceObject(BacnetObject bacnetObject)
+        public JsonDeviceObject(CachedObject cachedObject)
         {
-            Type = bacnetObject.Type;
-            Instance = bacnetObject.Instance;
+            Type = cachedObject.Type;
+            Instance = cachedObject.Instance;
+            Name = cachedObject.Name;
         }
     }
 }

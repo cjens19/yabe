@@ -33,3 +33,4 @@ C:\sourcecode\igor-yabe\Yabe\bin\Debug\Igor's Yabe.pdb
 C:\sourcecode\igor-yabe\Yabe\obj\x86\Debug\Igor's Yabe.exe.config
 C:\sourcecode\igor-yabe\Yabe\obj\x86\Debug\Igor's Yabe.exe
 C:\sourcecode\igor-yabe\Yabe\obj\x86\Debug\Igor's Yabe.pdb
+C:\sourcecode\igor-yabe\Yabe\obj\x86\Debug\Yabe.csprojAssemblyReference.cache

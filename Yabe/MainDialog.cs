@@ -940,7 +940,7 @@ namespace Yabe
                 node = nodes.Add("PROPRIETARY:" + bacnetObject.Instance + " (" + name + ")");  // Proprietary Objects not in enum appears only with the number such as 584:0
 
             node.Tag = bacnetObject;
-            node.Checked = _cache.ObjectCheckedState(GetCurrentDeviceId(), bacnetObject);
+            node.Checked = _cache.ObjectCheckedState(GetCurrentDeviceId(), bacnetObject.ToCachedObject(name));
 
             //icon
             SetNodeIcon(bacnetObject.type, node);
@@ -1053,18 +1053,20 @@ namespace Yabe
         {
             if (!(e.Node.Tag is BacnetObject bacnetObject)) return;
 
-            bacnetObject.Exportable = e.Node.Checked;
+            //  bacnetObject.Exportable = e.Node.Checked;
 
             var currentId = GetCurrentDeviceId();
 
-            Debug.WriteLine($"Device {currentId} {bacnetObject.Type} is now exportable? {bacnetObject.Exportable}");
+            // Debug.WriteLine($"Device {currentId} {bacnetObject.Type} is now exportable? {bacnetObject.Exportable}");
 
-            _cache.AddOrUpdate(currentId, bacnetObject);
+            //_cache.AddOrUpdate(currentId, bacnetObject.ToCachedObject());
+
+            _cache.UpdateCheckedState(currentId, bacnetObject.Type, bacnetObject.Instance, e.Node.Checked);
         }
         private void m_DeviceTree_BeforeCheck(object sender, TreeViewCancelEventArgs e)
         {
-            if (!(e.Node.Tag is KeyValuePair<BacnetAddress, uint> entry))
-                e.Cancel = true;
+            //if (!(e.Node.Tag is KeyValuePair<BacnetAddress, uint> entry))
+            //    e.Cancel = true;
         }
         private void m_AddressSpaceTree_BeforeCheck(object sender, TreeViewCancelEventArgs e)
         {
@@ -1076,34 +1078,80 @@ namespace Yabe
 
         private void m_DeviceTree_AfterCheck(object sender, TreeViewEventArgs e)
         {
-            if (_busy) return;
-            _busy = true;
-            try
-            {
-                CheckChildNodes(e.Node, e.Node.Checked);
-                CheckObjectNodes(e.Node.Tag, e.Node.Checked);
-            }
-            finally
-            {
-                _busy = false;
-            }
+            //if (_busy) return;
+            //_busy = true;
+            //try
+            //{
+            //    CheckChildNodes(e.Node, e.Node.Checked);
+            //    CheckObjectNodes(e.Node.Tag, e.Node.Checked);
+            //}
+            //finally
+            //{
+            //    _busy = false;
+            //}
         }
 
-        private static void CheckObjectNodes(object tag, bool @checked)
-        {
-            if (!(tag is KeyValuePair<BacnetAddress, uint> device)) return;
-            {
-                var deviceId = device.Value;
-            }
-        }
+        //private static void CheckObjectNodes(object tag, bool @checked)
+        //{
+        //    if (!(tag is KeyValuePair<BacnetAddress, uint> device)) return;
+        //    {
+        //        var deviceId = device.Value;
+        //    }
+        //}
 
-        private static void CheckChildNodes(TreeNode node, bool @checked)
+        //private static void CheckChildNodes(TreeNode node, bool @checked)
+        //{
+        //    foreach (TreeNode child in node.Nodes)
+        //    {
+        //        child.Checked = @checked;
+        //        CheckChildNodes(child, @checked);
+        //    }
+        //}
+        private void m_AddressSpaceTree_AfterSelect(object sender, TreeViewEventArgs e)
         {
-            foreach (TreeNode child in node.Nodes)
+            UpdatePropertyGrid(e.Node, GetCurrentDeviceId());
+
+            BacnetClient client;
+            BacnetAddress address;
+            BacnetObject bacnetObject;
+
+            // Hide all elements in the toolstrip menu
+            foreach (var its in m_AddressSpaceMenuStrip.Items)
+                (its as ToolStripMenuItem).Visible = false;
+            // Set Subscribe always visible
+            m_AddressSpaceMenuStrip.Items[0].Visible = true;
+
+            // Get the node type
+            GetObjectLink(out client, out address, out bacnetObject, BacnetObjectTypes.MAX_BACNET_OBJECT_TYPE);
+            // Set visible some elements depending of the object type
+            switch (bacnetObject.type)
             {
-                child.Checked = @checked;
-                CheckChildNodes(child, @checked);
+                case BacnetObjectTypes.OBJECT_FILE:
+                    m_AddressSpaceMenuStrip.Items[1].Visible = true;
+                    m_AddressSpaceMenuStrip.Items[2].Visible = true;
+                    break;
+
+                case BacnetObjectTypes.OBJECT_TRENDLOG:
+                case BacnetObjectTypes.OBJECT_TREND_LOG_MULTIPLE:
+                    m_AddressSpaceMenuStrip.Items[3].Visible = true;
+                    break;
+
+                case BacnetObjectTypes.OBJECT_SCHEDULE:
+                    m_AddressSpaceMenuStrip.Items[4].Visible = true;
+                    break;
+
+                case BacnetObjectTypes.OBJECT_NOTIFICATION_CLASS:
+                    m_AddressSpaceMenuStrip.Items[5].Visible = true;
+                    break;
+
+                case BacnetObjectTypes.OBJECT_CALENDAR:
+                    m_AddressSpaceMenuStrip.Items[6].Visible = true;
+                    break;
             }
+
+            // Allows delete menu 
+            if (bacnetObject.type != BacnetObjectTypes.OBJECT_DEVICE)
+                m_AddressSpaceMenuStrip.Items[7].Visible = true;
         }
 
         private void m_DeviceTree_AfterSelect(object sender, TreeViewEventArgs e)
@@ -1220,6 +1268,8 @@ namespace Yabe
                         // If the Device name not set, try to update it
                         if (bacnetObject.type == BacnetObjectTypes.OBJECT_DEVICE)
                         {
+                            IList<BacnetValue> values;
+
                             if (e.Node.ToolTipText == "")   // already update with the device name
                             {
                                 var propObjectNameOk = false;
@@ -1235,7 +1285,6 @@ namespace Yabe
                                 else
                                     try
                                     {
-                                        IList<BacnetValue> values;
                                         if (client.ReadPropertyRequest(bacnetAddress, bacnetObject, BacnetPropertyIds.PROP_OBJECT_NAME, out values))
                                         {
                                             e.Node.ToolTipText = e.Node.Text;   // IP or MSTP node id -> in the Tooltip
@@ -1250,12 +1299,13 @@ namespace Yabe
                                     }
                                     catch { }
                             }
-                        }
 
-                        var obj = bacnetObject;
-                        obj.Exportable = _cache.ObjectCheckedState(deviceId, bacnetObject);
+                            //client.ReadPropertyRequest(bacnetAddress, bacnetObject, BacnetPropertyIds.PROP_OBJECT_NAME, out var names);
+                            var cachedObject = bacnetObject.ToCachedObject(e.Node.Text);//(names[0].ToString());
+                            cachedObject.Exportable = true;
+                            _cache.AddOrUpdate(deviceId, cachedObject);
+                        }
                         AddObjectEntry(client, bacnetAddress, null, bacnetObject, m_AddressSpaceTree.Nodes);//AddObjectEntry(comm, adr, null, bobj_id, e.Node.Nodes); 
-                        _cache.AddOrUpdate(deviceId, obj);
                     }
                 }
                 finally
@@ -1465,7 +1515,7 @@ namespace Yabe
             return true;
         }
 
-        private void UpdateGrid(TreeNode selectedNode)
+        private void UpdatePropertyGrid(TreeNode selectedNode, uint deviceId = 0)
         {
             Cursor = Cursors.WaitCursor;
             try
@@ -1475,28 +1525,29 @@ namespace Yabe
                 else if (m_DeviceTree.SelectedNode.Tag == null) return;
                 else if (!(m_DeviceTree.SelectedNode.Tag is KeyValuePair<BacnetAddress, uint>)) return;
                 var entry = (KeyValuePair<BacnetAddress, uint>)m_DeviceTree.SelectedNode.Tag;
-                var adr = entry.Key;
-                BacnetClient comm;
+                var address = entry.Key;
+                BacnetClient client;
 
                 if (m_DeviceTree.SelectedNode.Parent.Tag is BacnetClient)
-                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
+                    client = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
                 else
-                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Parent.Tag;  // routed node
+                    client = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Parent.Tag;  // routed node
 
                 if (selectedNode.Tag is BacnetObject)
                 {
                     m_DataGrid.SelectedObject = null;   //clear
 
-                    var objectId = (BacnetObject)selectedNode.Tag;
+                    var bacnetObject = (BacnetObject)selectedNode.Tag;
+                    bacnetObject.Exportable = selectedNode.Checked;
                     var properties = new BacnetPropertyReference[] { new BacnetPropertyReference((uint)BacnetPropertyIds.PROP_ALL, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL) };
                     IList<BacnetReadAccessResult> multiValueList;
                     try
                     {
                         //fetch properties. This might not be supported (ReadMultiple) or the response might be too long.
-                        if (!comm.ReadPropertyMultipleRequest(adr, objectId, properties, out multiValueList))
+                        if (!client.ReadPropertyMultipleRequest(address, bacnetObject, properties, out multiValueList))
                         {
                             Trace.TraceWarning("Couldn't perform ReadPropertyMultiple ... Trying ReadProperty instead");
-                            if (!ReadAllPropertiesBySingle(comm, adr, objectId, out multiValueList))
+                            if (!ReadAllPropertiesBySingle(client, address, bacnetObject, out multiValueList))
                             {
                                 MessageBox.Show(this, "Couldn't fetch properties", "Communication Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                                 return;
@@ -1510,7 +1561,7 @@ namespace Yabe
                         try
                         {
                             //fetch properties with single calls
-                            if (!ReadAllPropertiesBySingle(comm, adr, objectId, out multiValueList))
+                            if (!ReadAllPropertiesBySingle(client, address, bacnetObject, out multiValueList))
                             {
                                 MessageBox.Show(this, "Couldn't fetch properties", "Communication Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                                 return;
@@ -1523,7 +1574,7 @@ namespace Yabe
                         }
                     }
 
-                    //update grid
+                    //update property grid
                     var bag = new Utilities.DynamicPropertyGridContainer();
                     foreach (BacnetPropertyValue pValue in multiValueList[0].values)
                     {
@@ -1548,7 +1599,7 @@ namespace Yabe
                         else
                             bValues = new BacnetValue[0];
 
-                        // Modif FC
+                        // Modify FC
                         switch ((BacnetPropertyIds)pValue.property.propertyIdentifier)
                         {
                             // PROP_RELINQUISH_DEFAULT can be write to null value
@@ -1572,15 +1623,17 @@ namespace Yabe
                         // The Prop Name replace the PropId into the Treenode 
                         if (pValue.property.propertyIdentifier == (byte)BacnetPropertyIds.PROP_OBJECT_NAME)
                         {
-
                             ChangeTreeNodePropertyName(selectedNode, value.ToString());// Update the object name if needed
 
                             lock (DevicesObjectsName)
                             {
-                                var t = new Tuple<string, BacnetObject>(adr.FullHashString(), objectId);
+                                var t = new Tuple<string, BacnetObject>(address.FullHashString(), bacnetObject);
                                 DevicesObjectsName.Remove(t);
                                 DevicesObjectsName.Add(t, value.ToString());
                             }
+
+                            //update cached object name
+                            _cache.AddOrUpdate(deviceId, bacnetObject.ToCachedObject(value.ToString()));
                         }
                     }
                     m_DataGrid.SelectedObject = bag;
@@ -1598,50 +1651,6 @@ namespace Yabe
             //    return;
             // Store the selected node (can deselect a node).
             //(sender as TreeView).SelectedNode = (sender as TreeView).GetNodeAt(e.X, e.Y);
-        }
-
-        private void m_AddressSpaceTree_AfterSelect(object sender, TreeViewEventArgs e)
-        {
-            UpdateGrid(e.Node);
-            BacnetClient cl; BacnetAddress ba; BacnetObject objId;
-
-            // Hide all elements in the toolstrip menu
-            foreach (var its in m_AddressSpaceMenuStrip.Items)
-                (its as ToolStripMenuItem).Visible = false;
-            // Set Subscribe always visible
-            m_AddressSpaceMenuStrip.Items[0].Visible = true;
-
-            // Get the node type
-            GetObjectLink(out cl, out ba, out objId, BacnetObjectTypes.MAX_BACNET_OBJECT_TYPE);
-            // Set visible some elements depending of the object type
-            switch (objId.type)
-            {
-                case BacnetObjectTypes.OBJECT_FILE:
-                    m_AddressSpaceMenuStrip.Items[1].Visible = true;
-                    m_AddressSpaceMenuStrip.Items[2].Visible = true;
-                    break;
-
-                case BacnetObjectTypes.OBJECT_TRENDLOG:
-                case BacnetObjectTypes.OBJECT_TREND_LOG_MULTIPLE:
-                    m_AddressSpaceMenuStrip.Items[3].Visible = true;
-                    break;
-
-                case BacnetObjectTypes.OBJECT_SCHEDULE:
-                    m_AddressSpaceMenuStrip.Items[4].Visible = true;
-                    break;
-
-                case BacnetObjectTypes.OBJECT_NOTIFICATION_CLASS:
-                    m_AddressSpaceMenuStrip.Items[5].Visible = true;
-                    break;
-
-                case BacnetObjectTypes.OBJECT_CALENDAR:
-                    m_AddressSpaceMenuStrip.Items[6].Visible = true;
-                    break;
-            }
-
-            // Allows delete menu 
-            if (objId.type != BacnetObjectTypes.OBJECT_DEVICE)
-                m_AddressSpaceMenuStrip.Items[7].Visible = true;
         }
 
         private void m_DataGrid_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
@@ -1755,7 +1764,7 @@ namespace Yabe
                 }
 
                 //reload
-                UpdateGrid(m_AddressSpaceTree.SelectedNode);
+                UpdatePropertyGrid(m_AddressSpaceTree.SelectedNode);
             }
             finally
             {
@@ -2500,7 +2509,7 @@ namespace Yabe
 
             Cursor = Cursors.WaitCursor;
             Application.DoEvents();
-            
+
             try
             {
                 var sw = new StreamWriter(dlg.FileName);
@@ -2518,7 +2527,7 @@ namespace Yabe
 
                     devices.Add(newDevice);
                 }
-                
+
                 var json = JsonSerializer.Serialize(devices);
 
                 sw.Write(json);
